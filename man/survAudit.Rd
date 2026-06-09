@@ -36,6 +36,7 @@ censoring, time distribution, ties, missing data).}
 \item{outliers}{Outlier assessment results or \code{NULL}.}
 \item{epv}{Events-per-variable ratio and classification or
 \code{NULL}.}
+\item{calibration}{Overall model calibration results or \code{NULL}.}
 \item{assumptions}{Structured assumption ontology.}
 \item{alpha}{The significance level used.}
 \item{audit_time}{Timestamp of the audit.}

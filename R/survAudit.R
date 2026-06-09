@@ -30,6 +30,7 @@
 #'     \item{outliers}{Outlier assessment results or \code{NULL}.}
 #'     \item{epv}{Events-per-variable ratio and classification or
 #'       \code{NULL}.}
+#'     \item{calibration}{Overall model calibration results or \code{NULL}.}
 #'     \item{assumptions}{Structured assumption ontology.}
 #'     \item{alpha}{The significance level used.}
 #'     \item{audit_time}{Timestamp of the audit.}
@@ -168,6 +169,15 @@ survAudit <- function(fit, data = NULL, alpha = 0.05, ph_transform = "km") {
    }
  )
 
+ calibration <- tryCatch(
+   .compute_calibration(fit),
+   error = function(e) {
+     warning("Calibration computation failed: ", conditionMessage(e),
+             call. = FALSE)
+     NULL
+   }
+ )
+
  # ── 7. Build assumption ontology ──────────────────────────────────
  assumptions <- tryCatch(
    .build_assumptions(ph, functional_form, influence, outliers, epv,
@@ -190,6 +200,7 @@ survAudit <- function(fit, data = NULL, alpha = 0.05, ph_transform = "km") {
    outliers      = outliers,
    epv           = epv,
    vif           = vif,
+   calibration   = calibration,
    assumptions   = assumptions,
    alpha         = alpha,
    audit_time    = audit_time

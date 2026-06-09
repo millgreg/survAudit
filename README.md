@@ -1,5 +1,7 @@
 # survAudit
 
+[![R-CMD-check](https://github.com/millgreg/survAudit/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/millgreg/survAudit/actions/workflows/R-CMD-check.yaml)
+
 > An Auditing and Transparency Framework for Cox Proportional Hazards Models
 
 `survAudit` provides a unified diagnostic auditing framework for Cox proportional hazards (PH) models. Rather than relying on fragmented diagnostic plots and tests, `survAudit` aggregates critical statistical diagnostics into a structured **Assumption Ontology** and provides a mechanism to document qualitative justifications for non-testable assumptions directly on the R model audit object.

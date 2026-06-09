@@ -35,6 +35,7 @@
                            outliers,
                            epv,
                            vif,
+                           calibration,
                            assumptions,
                            alpha,
                            audit_time) {
@@ -48,6 +49,7 @@
       outliers = outliers,
       epv = epv,
       vif = vif,
+      calibration = calibration,
       assumptions = assumptions,
       alpha = alpha,
       audit_time = audit_time
@@ -75,7 +77,7 @@
 
   required_components <- c(
     "model_info", "data_context", "ph", "functional_form",
-    "influence", "outliers", "epv", "vif", "assumptions", "alpha", "audit_time"
+    "influence", "outliers", "epv", "vif", "calibration", "assumptions", "alpha", "audit_time"
   )
 
   missing <- setdiff(required_components, names(x))
@@ -101,7 +103,7 @@
 
   # Optional diagnostic components: must be list or NULL
   optional_lists <- c("data_context", "ph", "functional_form",
-                       "influence", "outliers", "epv", "vif")
+                       "influence", "outliers", "epv", "vif", "calibration")
   for (comp in optional_lists) {
     if (!is.null(x[[comp]]) && !is.list(x[[comp]])) {
       stop(

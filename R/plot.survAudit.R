@@ -9,8 +9,8 @@
 #' @param x An object of class \code{survAudit}.
 #' @param which Character vector specifying which plots to produce.
 #'   Valid values are \code{"ph"}, \code{"functional"},
-#'   \code{"influence"}, and \code{"outliers"}.
-#'   Defaults to all four.
+#'   \code{"influence"}, \code{"outliers"}, and \code{"calibration"}.
+#'   Defaults to all five.
 #' @param ask Logical. If \code{TRUE} (the default in interactive
 #'   sessions), the user is prompted between plots.
 #' @param ... Additional arguments (currently ignored).
@@ -29,12 +29,12 @@
 #' plot(audit, which = "ph")
 plot.survAudit <- function(x,
                            which = c("ph", "functional",
-                                     "influence", "outliers"),
+                                     "influence", "outliers", "calibration"),
                            ask = interactive(),
                            ...) {
 
   which <- match.arg(which, choices = c("ph", "functional",
-                                        "influence", "outliers"),
+                                        "influence", "outliers", "calibration"),
                      several.ok = TRUE)
 
   # Colour palette ──────────────────────────────────────────────
@@ -89,6 +89,18 @@ plot.survAudit <- function(x,
     } else {
       plots[["outliers"]] <- .plot_outliers(
         x$outliers, col_point, col_ref, alpha_pt
+      )
+    }
+  }
+
+  # ── Calibration ──────────────────────────────────────────────
+  if ("calibration" %in% which) {
+    if (is.null(x$calibration) || length(x$calibration$plot_x) == 0L) {
+      message("Calibration diagnostics not available; ",
+              "skipping 'calibration' plot.")
+    } else {
+      plots[["calibration"]] <- .plot_calibration(
+        x$calibration, col_point, col_ref, alpha_pt
       )
     }
   }
@@ -372,5 +384,38 @@ plot.survAudit <- function(x,
     theme(
       plot.title  = element_text(size = 12, face = "bold"),
       strip.text  = element_text(face = "bold")
+    )
+}
+
+#' Plot calibration diagnostics
+#'
+#' @param cal Calibration diagnostics list.
+#' @param col_point Point colour.
+#' @param col_ref Reference line colour.
+#' @param alpha_pt Point alpha.
+#' @return A \code{ggplot} object.
+#' @keywords internal
+.plot_calibration <- function(cal, col_point, col_ref, alpha_pt) {
+
+  df <- data.frame(
+    x = cal$plot_x,
+    y = cal$plot_y,
+    stringsAsFactors = FALSE
+  )
+
+  ggplot(df, aes(x = .data$x, y = .data$y)) +
+    geom_point(colour = col_point, alpha = alpha_pt, size = 1) +
+    geom_abline(intercept = 0, slope = 1, linetype = "dashed",
+                colour = col_ref, linewidth = 0.8) +
+    labs(
+      title = "Overall Model Calibration",
+      subtitle = "Nelson-Aalen Cumulative Hazard of Cox-Snell Residuals",
+      x     = "Cox-Snell Residual",
+      y     = "Cumulative Hazard"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title    = element_text(size = 12, face = "bold"),
+      plot.subtitle = element_text(size = 10, face = "italic")
     )
 }

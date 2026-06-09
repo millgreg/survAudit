@@ -151,3 +151,31 @@ test_that("VIF is calculated correctly and handles factor terms", {
   expect_equal(nrow(audit$vif$vif), 4)
   expect_true(all(audit$vif$vif[, "Df"] >= 1))
 })
+
+# ── Test 14: survAudit works with models containing interaction terms ───
+test_that("survAudit works with interaction terms", {
+  fit_int <- coxph(Surv(time, status) ~ trt * age + karno, data = veteran)
+  audit_int <- survAudit(fit_int)
+  expect_s3_class(audit_int, "survAudit")
+  # VIF should gracefully handle or flag interaction terms depending on how car::vif acts
+  expect_output(print(audit_int))
+})
+
+# ── Test 15: survAudit handles missing data (survival::lung dataset) ────
+test_that("survAudit handles missing data properly", {
+  # lung dataset has missing values in covariates like meal.cal, wt.loss
+  lung_data <- survival::lung
+  fit_miss <- coxph(Surv(time, status) ~ age + sex + ph.ecog + meal.cal + wt.loss, 
+                    data = lung_data)
+  
+  audit_miss <- survAudit(fit_miss, data = lung_data)
+  expect_s3_class(audit_miss, "survAudit")
+  
+  # Data context should document missingness
+  expect_true(is.data.frame(audit_miss$data_context$missing_data))
+  expect_true(sum(audit_miss$data_context$missing_data$n_missing) > 0)
+  
+  # Ensure plots run without error despite missingness
+  expect_no_error(plot(audit_miss, which = "ph", ask = FALSE))
+  expect_no_error(plot(audit_miss, which = "functional", ask = FALSE))
+})

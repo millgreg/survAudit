@@ -1,0 +1,24 @@
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>/404.html</loc></url>
+<url><loc>/articles/index.html</loc></url>
+<url><loc>/articles/survAudit-introduction.html</loc></url>
+<url><loc>/authors.html</loc></url>
+<url><loc>/index.html</loc></url>
+<url><loc>/LICENSE.html</loc></url>
+<url><loc>/news/index.html</loc></url>
+<url><loc>/reference/dot-get_non_identifiable_items.html</loc></url>
+<url><loc>/reference/dot-plot_calibration.html</loc></url>
+<url><loc>/reference/dot-plot_functional.html</loc></url>
+<url><loc>/reference/dot-plot_influence.html</loc></url>
+<url><loc>/reference/dot-plot_outliers.html</loc></url>
+<url><loc>/reference/dot-plot_ph.html</loc></url>
+<url><loc>/reference/dot-print_assumption_group.html</loc></url>
+<url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/plot.survAudit.html</loc></url>
+<url><loc>/reference/print.summary.survAudit.html</loc></url>
+<url><loc>/reference/print.survAudit.html</loc></url>
+<url><loc>/reference/summary.survAudit.html</loc></url>
+<url><loc>/reference/survAudit-package.html</loc></url>
+<url><loc>/reference/survAudit.html</loc></url>
+</urlset>
+

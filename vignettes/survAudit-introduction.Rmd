@@ -141,12 +141,13 @@ The `summary()` output provides a complete, structured view of all statistical t
 
 1. **Data Context**: Summarizes key time-to-event data profiles, including the sample size ($N$), number of events, censoring rate, median time, interquartile range (IQR), tied event times, and data completeness (missing values).
 2. **Model Info**: Displays the fitted Cox model formula, estimator method (e.g., Efron, Breslow), and convergence status.
-3. **Proportional Hazards**: Shows the complete `cox.zph` table containing the chi-squared statistic, degrees of freedom, and p-value for each covariate, sorted by p-value ascending to highlight potential violations, followed by the global test.
-4. **Functional Form**: Compares a linear fit against a LOESS smooth for each continuous covariate using martingale residuals from a reduced model, reporting whether a non-linear departure was flagged.
-5. **Influence Stability**: Displays the standard flagging threshold ($2/\sqrt{n}$), the covariate and observation index with the maximum absolute standardized DFBETA, and the observation with the maximum likelihood displacement. It also lists the indices of any observations exceeding the DFBETA threshold.
-6. **Outliers**: Lists the observation indices with the largest positive and negative residuals across Martingale, Deviance, Log-Odds, and Normal Deviate residuals.
-7. **Event Sufficiency (Events Per Variable - EPV)**: Reports the Events Per Variable ratio (number of events divided by the number of regression coefficients) and classifies it as *adequate* ($\ge 20$), *marginal* ($10 \text{ to } 20$), or *low* ($< 10$).
-8. **Collinearity**: Displays the Variance Inflation Factors (VIF) or Generalized Variance Inflation Factors (GVIF) for each covariate to check for multicollinearity, along with the thresholds used for detection (VIF $> 5$ or GVIF$^{1/(2 \cdot \text{Df})} > 2.25$).
+3. **Overall Calibration**: Reports if Cox-Snell residuals have been computed for overall model fit assessment.
+4. **Proportional Hazards**: Shows the complete `cox.zph` table containing the chi-squared statistic, degrees of freedom, and p-value for each covariate, sorted by p-value ascending to highlight potential violations, followed by the global test.
+5. **Functional Form**: Compares a linear fit against a LOESS smooth for each continuous covariate using martingale residuals from a reduced model, reporting whether a non-linear departure was flagged.
+6. **Influence Stability**: Displays the standard flagging threshold ($2/\sqrt{n}$), the covariate and observation index with the maximum absolute standardized DFBETA, and the observation with the maximum likelihood displacement. It also lists the indices of any observations exceeding the DFBETA threshold.
+7. **Outliers**: Lists the observation indices with the largest positive and negative residuals across Martingale, Deviance, Log-Odds, and Normal Deviate residuals.
+8. **Event Sufficiency (Events Per Variable - EPV)**: Reports the Events Per Variable ratio (number of events divided by the number of regression coefficients) and classifies it as *adequate* ($\ge 20$), *marginal* ($10 \text{ to } 20$), or *low* ($< 10$).
+9. **Collinearity**: Displays the Variance Inflation Factors (VIF) or Generalized Variance Inflation Factors (GVIF) for each covariate to check for multicollinearity, along with the thresholds used for detection (VIF $> 5$ or GVIF$^{1/(2 \cdot \text{Df})} > 2.25$).
 
 ---
 
@@ -158,6 +159,7 @@ You can generate high-quality `ggplot2` diagnostic plots using the `plot()` meth
 * **`"functional"`**: Plots adjusted martingale residuals against continuous covariate values to assess the linearity assumption (functional form).
 * **`"influence"`**: Visualizes observation-level influence metrics including standardized DFBETAs (with threshold limits) and likelihood displacement.
 * **`"outliers"`**: Displays four panels of residuals (Martingale, Deviance, Log-Odds, and Normal Deviate) against the linear predictor to detect outlier observations.
+* **`"calibration"`**: Plots the Nelson-Aalen cumulative hazard of the Cox-Snell residuals against the residuals themselves to verify overall model fit.
 
 Below are the plots generated from our `veteran` dataset model, along with instructions on what we see, how to interpret them, and their limitations.
 
@@ -231,6 +233,21 @@ plot(audit, which = "outliers")
   2. Investigate whether a treatment interaction term is missing (e.g. did a treatment only work on a specific outlier subgroup?).
   3. Consider alternative survival distributions if outliers are widespread.
 * **Limitations**: In survival models with heavy censoring, residuals (especially martingale and deviance) are highly skewed and asymmetric, making it harder to define a clean symmetric cutoff for outliers compared to standard regression.
+
+### Calibration Panel
+This panel plots the empirical cumulative hazard of the Cox-Snell residuals against the residuals themselves, overlaying a dashed 45-degree reference line:
+
+```{r plot-calibration}
+plot(audit, which = "calibration")
+```
+
+* **What we see in this model**: The plotted points track the dashed 45-degree reference line closely, especially in the lower ranges where the majority of the data lies.
+* **Interpretation & Consequences**: If the model is correctly specified, the Cox-Snell residuals should behave like a censored sample from a standard exponential distribution (with hazard $\lambda=1$). Thus, their cumulative hazard should be a straight line with a slope of 1. If the points deviate significantly from the 45-degree line, it suggests the overall model fit is poor (e.g., missing critical covariates, wrong functional forms, or the wrong baseline hazard distribution).
+* **Remedies**: 
+  1. Re-evaluate the functional forms of continuous covariates.
+  2. Check for missing important interaction terms.
+  3. Consider whether a parametric model (e.g., Weibull or log-normal) might be more appropriate if the baseline hazard does not fit well.
+* **Limitations**: Cox-Snell residuals are a measure of overall model fit, not a specific test for any single assumption. They often deviate from the 45-degree line in the right tail (high residual values) due to small sample sizes and heavy censoring at the end of follow-up, which is normal and does not necessarily indicate a poor fit.
 
 ---
 

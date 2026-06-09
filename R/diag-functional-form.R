@@ -60,8 +60,8 @@
       # Extract martingale residuals from the null model
       mart_resid <- stats::residuals(null_fit, type = "martingale")
 
-      # Get covariate values from the complete cases data
-      covariate_values <- data_complete[[var]]
+      # Get covariate values from the model frame (which evaluates transformations like log())
+      covariate_values <- mf[[var]]
 
       # Remove any NAs (just in case)
       complete <- stats::complete.cases(covariate_values, mart_resid)

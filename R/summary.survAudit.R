@@ -31,6 +31,7 @@ summary.survAudit <- function(object, ...) {
     outliers        = object$outliers,
     epv             = object$epv,
     vif             = object$vif,
+    calibration     = object$calibration,
     assumptions     = object$assumptions,
     alpha           = object$alpha,
     audit_time      = object$audit_time
@@ -164,6 +165,19 @@ print.summary.survAudit <- function(x, ...) {
       if (isTRUE(mi$converged)) "yes" else "no / unknown", "\n")
 
   # ═══════════════════════════════════════════════════════════════
+  # Overall Calibration (Cox-Snell)
+  # ═══════════════════════════════════════════════════════════════
+  cat("\n")
+  cat(.section_header("Overall Model Calibration"), "\n\n")
+
+  if (!is.null(x$calibration)) {
+    cat("  Cox-Snell residuals computed.\n")
+    cat("  (See plot(audit, which = \"calibration\") for the Nelson-Aalen cumulative hazard plot.)\n")
+  } else {
+    cat("  Calibration diagnostics not available.\n")
+  }
+
+  # ═══════════════════════════════════════════════════════════════
   # Proportional Hazards
   # ═══════════════════════════════════════════════════════════════
   cat("\n")
@@ -257,6 +271,12 @@ print.summary.survAudit <- function(x, ...) {
     inf <- x$influence
     cat("  Threshold (2/sqrt(n)): ",
         sprintf("%.4f", inf$threshold), "\n")
+        
+    if (!is.null(x$data_context) && x$data_context$n > 10000) {
+      cat("  *Note: In large datasets (N > 10,000), this threshold may be overly sensitive.\n")
+      cat("         Evaluate the absolute magnitude of coefficient change.*\n")
+    }
+    
     cat("  Max |dfbetas|:         ",
         sprintf("%.4f", inf$max_dfbetas$value),
         " (obs #", inf$max_dfbetas$obs,
@@ -297,6 +317,10 @@ print.summary.survAudit <- function(x, ...) {
 
   if (!is.null(x$outliers)) {
     ol <- x$outliers
+    
+    cat("  *Note: Deviance residuals are the most robust symmetric measure for outliers,\n")
+    cat("         especially in heavily censored datasets.*\n\n")
+    
     cat("  Flagged deviance residuals (|resid| > 1.96):       ",
         length(ol$flagged$deviance), "\n")
     cat("  Flagged log-odds residuals (|resid| > 3.66):       ",
