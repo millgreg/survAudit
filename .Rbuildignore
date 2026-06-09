@@ -1,0 +1,9 @@
+^\.Rbuildignore$
+^\.Rproj\.user$
+^.*\.Rproj$
+^LICENSE\.md$
+^README\.md$
+^\.gitignore$
+^\.git$
+^\.github$
+^Rplots\.pdf$

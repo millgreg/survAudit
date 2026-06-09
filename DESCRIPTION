@@ -1,0 +1,28 @@
+Package: survAudit
+Title: Auditing and Transparency Framework for Cox Proportional Hazards Models
+Version: 0.1.0
+Authors@R: 
+    person("Gregor", "Miller", role = c("aut", "cre"), email = "gregor.miller@uk-augsburg.de")
+Description: Provides a unified diagnostic auditing framework for Cox 
+    proportional hazards models. Automates proportional hazards testing, 
+    functional form assessment, influence diagnostics, outlier detection, 
+    and event sufficiency checks. Implements a structured assumption ontology 
+    that explicitly classifies model assumptions as statistically assessable, 
+    partially assessable, or non-identifiable, encouraging transparent 
+    reporting of unverifiable assumptions alongside data-driven diagnostics.
+License: GPL-3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Depends:
+    R (>= 4.1.0)
+Imports:
+    survival,
+    ggplot2,
+    stats
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0
