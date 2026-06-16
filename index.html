@@ -113,16 +113,21 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the source package directly in R:</p>
+<p>You can install the development version of <code>survAudit</code> directly from GitHub using the <code>remotes</code> package:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install the built source archive</span></span>
+<code class="sourceCode R"><span><span class="co"># Install from GitHub</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"remotes"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"millgreg/survAudit"</span><span class="op">)</span></span></code></pre></div>
+<p>Alternatively, if you have the source archive downloaded, you can install it manually:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Install the built source archive locally</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"survAudit_1.0.0.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/therneau/survival" class="external-link">survival</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">survAudit</span><span class="op">)</span></span>
 <span></span>
@@ -153,7 +158,7 @@
 <h3 id="documenting-qualitative-justifications">Documenting Qualitative Justifications<a class="anchor" aria-label="anchor" href="#documenting-qualitative-justifications"></a>
 </h3>
 <p>Check off outstanding non-identifiable assumptions by writing qualitative justifications directly into the audit object:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Document independent censoring</span></span>
 <span><span class="va">audit</span><span class="op">$</span><span class="va">assumptions</span><span class="op">$</span><span class="va">non_identifiable</span><span class="op">$</span><span class="va">independent_censoring</span><span class="op">$</span><span class="va">justification</span> <span class="op">&lt;-</span> </span>
 <span>  <span class="st">"Censoring is administrative (end of study period) and patient drop-out is unrelated to disease severity."</span></span>
