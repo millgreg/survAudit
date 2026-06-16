@@ -83,6 +83,24 @@ print.survAudit <- function(x, ...) {
     cat("    not available\n")
   }
 
+  # -- Functional Form --
+  cat("  Functional Form (visual assessment)\n")
+  if (!is.null(x$functional_form) &&
+      length(x$functional_form$results) > 0L) {
+    for (vname in names(x$functional_form$results)) {
+      res <- x$functional_form$results[[vname]]
+      if (isTRUE(res$departure_detected)) {
+        cat("    ", vname, ": possible departure from linearity\n",
+            sep = "")
+      } else {
+        cat("    ", vname, ": no apparent departure from linearity\n",
+            sep = "")
+      }
+    }
+  } else {
+    cat("    not available\n")
+  }
+
   # ── Statistically Assessable Assumptions ───────────────────────
   cat("\n")
   cat(.section_header("Statistically Assessable Assumptions"), "\n\n")
@@ -120,26 +138,6 @@ print.survAudit <- function(x, ...) {
 
   cat("\n")
 
-  # -- Functional Form --
-  cat("  Functional Form\n")
-  if (!is.null(x$functional_form) &&
-      length(x$functional_form$results) > 0L) {
-    for (vname in names(x$functional_form$results)) {
-      res <- x$functional_form$results[[vname]]
-      if (isTRUE(res$departure_detected)) {
-        cat("    ", vname, ": departure from linearity detected\n",
-            sep = "")
-      } else {
-        cat("    ", vname, ": no departure from linearity detected\n",
-            sep = "")
-      }
-    }
-  } else {
-    cat("    not available\n")
-  }
-
-  cat("\n")
-
   # -- Influence Stability --
   cat("  Influence Stability\n")
   if (!is.null(x$influence)) {
@@ -148,9 +146,6 @@ print.survAudit <- function(x, ...) {
         sprintf("%.2f", inf$max_dfbetas$value),
         " (obs #", inf$max_dfbetas$obs,
         ", covariate: ", inf$max_dfbetas$variable, ")\n", sep = "")
-    cat("    Max likelihood displacement: ",
-        sprintf("%.2f", inf$max_ld$value),
-        " (obs #", inf$max_ld$obs, ")\n", sep = "")
   } else {
     cat("    not available\n")
   }
@@ -188,7 +183,7 @@ print.survAudit <- function(x, ...) {
 #' Retrieve non-identifiable assumption items
 #'
 #' Returns the list of non-identifiable assumptions with their labels
-#' and current justification status, drawn from the assumption ontology
+#' and current justification status, drawn from the assumption classification
 #' or sensible defaults.
 #'
 #' @param x A \code{survAudit} object.
@@ -203,7 +198,7 @@ print.survAudit <- function(x, ...) {
     list(label = "Absence of unmeasured confounding", justification = NULL)
   )
 
-  # If the assumption ontology has non_identifiable entries, use them
+  # If the assumption classification has non_identifiable entries, use them
  if (!is.null(x$assumptions) &&
       !is.null(x$assumptions$non_identifiable) &&
       length(x$assumptions$non_identifiable) > 0L) {

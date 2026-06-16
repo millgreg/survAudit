@@ -55,6 +55,12 @@ test_that("plot.survAudit() runs without error for 'functional'", {
   expect_no_error(plot(audit, which = "functional", ask = FALSE))
 })
 
+test_that("plot.survAudit() runs without error for 'gof'", {
+  audit <- survAudit(fit)
+  p <- plot(audit, which = "gof", ask = FALSE)
+  expect_true(inherits(p, "gg") || inherits(p, "ggplot"))
+})
+
 # ── Test 5: EPV is computed correctly ────────────────────────────
 test_that("EPV is computed correctly against manual calculation", {
   audit <- survAudit(fit)
@@ -78,7 +84,7 @@ test_that("survAudit object has all expected components", {
   audit <- survAudit(fit)
   expected_names <- c("model_info", "data_context", "ph",
                       "functional_form", "influence", "outliers",
-                      "epv", "assumptions", "alpha", "audit_time")
+                      "epv", "vif", "gof", "assumptions", "alpha", "audit_time")
   for (nm in expected_names) {
     expect_true(nm %in% names(audit),
                 info = paste("Missing component:", nm))

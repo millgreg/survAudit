@@ -9,7 +9,7 @@
 #' @param x An object of class \code{survAudit}.
 #' @param which Character vector specifying which plots to produce.
 #'   Valid values are \code{"ph"}, \code{"functional"},
-#'   \code{"influence"}, \code{"outliers"}, and \code{"calibration"}.
+#'   \code{"influence"}, \code{"outliers"}, and \code{"gof"}.
 #'   Defaults to all five.
 #' @param ask Logical. If \code{TRUE} (the default in interactive
 #'   sessions), the user is prompted between plots.
@@ -29,12 +29,12 @@
 #' plot(audit, which = "ph")
 plot.survAudit <- function(x,
                            which = c("ph", "functional",
-                                     "influence", "outliers", "calibration"),
+                                     "influence", "outliers", "gof"),
                            ask = interactive(),
                            ...) {
 
   which <- match.arg(which, choices = c("ph", "functional",
-                                        "influence", "outliers", "calibration"),
+                                        "influence", "outliers", "gof"),
                      several.ok = TRUE)
 
   # Colour palette ──────────────────────────────────────────────
@@ -93,14 +93,14 @@ plot.survAudit <- function(x,
     }
   }
 
-  # ── Calibration ──────────────────────────────────────────────
-  if ("calibration" %in% which) {
-    if (is.null(x$calibration) || length(x$calibration$plot_x) == 0L) {
-      message("Calibration diagnostics not available; ",
-              "skipping 'calibration' plot.")
+  # ── Global Goodness-of-Fit ───────────────────────────────────
+  if ("gof" %in% which) {
+    if (is.null(x$gof) || length(x$gof$plot_x) == 0L) {
+      message("Goodness-of-fit diagnostics not available; ",
+              "skipping 'gof' plot.")
     } else {
-      plots[["calibration"]] <- .plot_calibration(
-        x$calibration, col_point, col_ref, alpha_pt
+      plots[["gof"]] <- .plot_gof(
+        x$gof, col_point, col_ref, alpha_pt
       )
     }
   }
@@ -291,15 +291,7 @@ plot.survAudit <- function(x,
     stringsAsFactors = FALSE
   )
 
-  # Add likelihood displacement as another panel
-  df_ld <- data.frame(
-    obs      = seq_len(n),
-    value    = inf$likelihood_displacement,
-    variable = "Likelihood Displacement",
-    stringsAsFactors = FALSE
-  )
-
-  df <- rbind(df_dfb, df_ld)
+  df <- df_dfb
 
   threshold <- inf$threshold
 
@@ -387,19 +379,19 @@ plot.survAudit <- function(x,
     )
 }
 
-#' Plot calibration diagnostics
+#' Plot goodness-of-fit diagnostics
 #'
-#' @param cal Calibration diagnostics list.
+#' @param gof Goodness-of-fit diagnostics list.
 #' @param col_point Point colour.
 #' @param col_ref Reference line colour.
 #' @param alpha_pt Point alpha.
 #' @return A \code{ggplot} object.
 #' @keywords internal
-.plot_calibration <- function(cal, col_point, col_ref, alpha_pt) {
+.plot_gof <- function(gof, col_point, col_ref, alpha_pt) {
 
   df <- data.frame(
-    x = cal$plot_x,
-    y = cal$plot_y,
+    x = gof$plot_x,
+    y = gof$plot_y,
     stringsAsFactors = FALSE
   )
 
@@ -408,7 +400,7 @@ plot.survAudit <- function(x,
     geom_abline(intercept = 0, slope = 1, linetype = "dashed",
                 colour = col_ref, linewidth = 0.8) +
     labs(
-      title = "Overall Model Calibration",
+      title = "Global Goodness-of-Fit",
       subtitle = "Nelson-Aalen Cumulative Hazard of Cox-Snell Residuals",
       x     = "Cox-Snell Residual",
       y     = "Cumulative Hazard"

@@ -20,237 +20,106 @@ knitr::opts_chunk$set(
 
 ## Survival Analysis and the Cox Model: A Beginner's Introduction
 
-When conducting research where the outcome of interest is the **time until an event occurs** (such as a patient recovering, a machine failing, or a customer churning), standard regression methods like linear or logistic regression fall short. This is because event times are often **censored**—some subjects complete the study without ever experiencing the event, meaning we only know they survived *at least* until their last follow-up.
+When conducting research where the outcome of interest is the **time until an event occurs**, standard regression methods fall short because event times are often **censored**—some subjects complete the study without ever experiencing the event.
 
-To analyze this type of data, we use **survival analysis**. The most widely used method is the **Cox Proportional Hazards (PH) model**. 
-
-Instead of predicting the exact time of an event, the Cox model estimates the **hazard ratio (HR)**. The hazard is the instantaneous risk of the event happening at any given moment, and the hazard ratio compares this risk between different groups (e.g., patients receiving a new treatment vs. a standard treatment).
-
-For a Cox model's hazard ratios to be valid and reliable, the model must satisfy several mathematical assumptions. If these assumptions are violated, the model's conclusions can be severely biased, potentially leading to incorrect clinical or business decisions.
+The most widely used method for this data is the **Cox Proportional Hazards (PH) model**. Instead of predicting the exact time of an event, it estimates the **hazard ratio (HR)**. For a Cox model's hazard ratios to be valid, the model must satisfy several mathematical assumptions. If violated, conclusions can be severely biased.
 
 ---
 
 ## Why Use `survAudit`?
 
-Traditionally, checking Cox model assumptions requires running separate diagnostic tests and plotting charts from multiple fragmented packages. This makes the diagnostic workflow tedious and difficult to document.
+Checking Cox model assumptions usually requires running fragmented tests from multiple packages. `survAudit` solves this by implementing:
 
-`survAudit` is designed to solve these issues. It does not simply wrap existing packages; rather, it implements:
-
-1. **A Unified Assumption Ontology**: It organizes all model assumptions into a structured hierarchy: *Non-Identifiable* (purely qualitative), *Partially Assessable* (combining data and analyst judgment), and *Statistically Assessable* (testable from data).
-2. **Advanced Adjusted Linearity Diagnostics**: Standard linearity checks plot residuals against covariates in a bivariate (unadjusted) fashion. `survAudit` fits reduced multivariate models to extract martingale residuals adjusted for other covariates, fits both a linear model and a LOESS smooth, and uses an adjusted R-squared ratio to automatically flag non-linear departures.
-3. **Auditable R Objects (RDS Persistence)**: Checking assumptions should not just be a visual exercise; it should be part of a reproducible audit trail. By allowing analysts to write qualitative justifications directly onto the R object, `survAudit` creates a self-contained record of model validity. When saved as an `.rds` file, this audit trail remains attached to the model for future peer review, regulatory auditing, or protocol compliance.
+1. **A Unified Assumption Classification**: Organizing assumptions into *Non-Identifiable* (purely qualitative), *Partially Assessable* (combining data and judgment), and *Statistically Assessable* (testable from data).
+2. **Comprehensive Diagnostics**: It aggregates proportional hazards, functional form, influence, outliers, and generalized collinearity (GVIF) into one run.
+3. **Auditable R Objects**: It returns an S3 object containing all raw diagnostic metrics (allowing custom extraction) and lets analysts append qualitative justifications directly to the object before saving it.
 
 ---
 
-## The Assumption Ontology
+## Step-by-Step Tutorial
 
-`survAudit` organizes model assumptions into three categories, presented in order of how they must be addressed by the analyst:
-
-### 1. Non-Identifiable Assumptions (Requires Qualitative Justification)
-
-These assumptions **cannot** be tested or verified using statistical diagnostics on the observed data. The analyst must justify them qualitatively based on the study design and domain knowledge:
-
-* **Independent Censoring**: The censoring mechanism is independent of the event process conditional on covariates. For example, patients should not drop out of a clinical trial because they are becoming too sick.
-* **Absence of Unmeasured Confounding**: All key factors that affect both the treatment assignment and the survival outcome are measured and included in the model.
-
-### 2. Partially Assessable Assumptions (Data-Informed + Analyst Judgment)
-
-These assumptions are partially informed by statistical metrics, but their severity and impact require clinical or domain judgment:
-
-* **Outlier Impact**: Identifying observations that experienced the event much earlier or lived much longer than predicted by the model, and determining if they represent data errors or sub-populations.
-* **Missing Data**: Checking whether missing covariate values are introducing bias or reducing the sample size through complete-case analysis.
-
-### 3. Statistically Assessable Assumptions (Data-Driven Diagnostics)
-
-These assumptions can be rigorously tested and verified using statistical diagnostics:
-
-* **Proportional Hazards**: The relative effect of each covariate stays constant over the follow-up period.
-* **Functional Form (Linearity)**: Continuous variables have a linear relationship with the log-hazard.
-* **Influence Stability**: No single observation exerts a disproportionate impact on the model's regression coefficients.
-* **Event Sufficiency (EPV)**: The number of events is sufficient relative to the number of model parameters to prevent overfitting (typically $\ge 10$ to $20$ events per variable).
-
----
-
-## Step-by-Step Example
-
-Let's walk through an audit using the classic `veteran` lung cancer clinical trial dataset from the `survival` package.
+We will demonstrate `survAudit` using the classic `pbc` dataset from the `survival` package, which records survival data for patients with primary biliary cholangitis.
 
 ### 1. Fit the Cox Model
-We fit a Cox model with a mixture of categorical (`celltype`, `trt`) and continuous (`karno`, `age`) covariates:
+We fit a Cox model using a mix of continuous covariates (`age`, `bili`, `albumin`, `protime`) and a categorical factor (`edema`):
 
 ```{r setup, message=FALSE, warning=FALSE}
 library(survival)
-library(ggplot2)
 library(survAudit)
 
-# Load the veteran dataset
-veteran <- survival::veteran
+# Load data and convert endpoint
+data(pbc, package = "survival")
+pbc$status <- ifelse(pbc$status == 2, 1, 0)
 
-# Fit a Cox PH model
+# Fit a naive Cox PH model
 fit <- coxph(
-  Surv(time, status) ~ trt + celltype + karno + age,
-  data = veteran
+  Surv(time, status) ~ age + bili + albumin + protime + factor(edema),
+  data = pbc
 )
 ```
 
 ### 2. Run the Audit
-Run the diagnostic audit using `survAudit()`. 
+Run the diagnostic audit using `survAudit()`.
 
 > [!NOTE]
-> The `data` parameter in `survAudit()` is **optional**. By default, `survAudit` will automatically extract the data frame from the fitted model object (via `fit$model` or `model.frame(fit)`). However, explicitly providing `data = veteran` acts as a safe override and ensures that all diagnostics (especially functional form) can run if the model frame doesn't store the full original data.
+> Supplying `data = pbc` is optional but highly recommended to ensure complete case extraction for functional form plots.
 
-```{r run-audit}
-audit <- survAudit(fit, data = veteran)
+```{r audit}
+audit <- survAudit(fit, data = pbc)
 ```
 
-### 3. Review Compact Console Output
-Calling `print()` on the audit object yields a structured, high-level summary. The non-identifiable assumptions are presented first to prompt the analyst for qualitative justification:
+### 3. Review the Summary
+The `summary()` method prints a concise console dashboard detailing the status of every assumption:
 
-```{r print-audit}
-print(audit)
-```
-
-Notice the empty boxes `[ ]` under non-identifiable assumptions. These represent assumptions that have not yet been qualitatively justified by the analyst.
-
-### 4. Documenting Qualitative Justifications
-To complete the audit trail, you can assign justifications directly to the non-identifiable assumptions in the R object:
-
-```{r justify}
-# Document independent censoring justification
-audit$assumptions$non_identifiable$independent_censoring$justification <- 
-  "Censoring is administrative (end of study period) and patient drop-out is unrelated to disease severity."
-
-# Document absence of unmeasured confounding
-audit$assumptions$non_identifiable$unmeasured_confounding$justification <- 
-  "Pre-specified baseline confounders (Karnofsky performance score, age, celltype) were controlled."
-```
-
-If we print the audit again, these assumptions will show as completed `[x]`. Storing these justifications inside the R object ensures they are saved when you write the object to an RDS file (e.g., `saveRDS(audit, "model_audit.rds")`), creating a persistent audit trail.
-
-### 5. Detailed Diagnostics Report
-For a deeper dive into the metrics and tables, use `summary()`:
-
-```{r summary-audit}
+```{r summary}
 summary(audit)
-```{r print-again, echo=FALSE, include=FALSE}
-# Internal helper chunk to avoid printing it twice in the vignette output itself
-# but still demonstrating it. Note: we do not need to run print(audit) or summary(audit) repeatedly.
 ```
 
-The `summary()` output provides a complete, structured view of all statistical tests and data profiles, organized into the following sections:
+### 4. Visual Diagnostics
+While the summary provides immediate flags, `survAudit` provides a dedicated `plot()` method to visually explore the violations. 
 
-1. **Data Context**: Summarizes key time-to-event data profiles, including the sample size ($N$), number of events, censoring rate, median time, interquartile range (IQR), tied event times, and data completeness (missing values).
-2. **Model Info**: Displays the fitted Cox model formula, estimator method (e.g., Efron, Breslow), and convergence status.
-3. **Overall Calibration**: Reports if Cox-Snell residuals have been computed for overall model fit assessment.
-4. **Proportional Hazards**: Shows the complete `cox.zph` table containing the chi-squared statistic, degrees of freedom, and p-value for each covariate, sorted by p-value ascending to highlight potential violations, followed by the global test.
-5. **Functional Form**: Compares a linear fit against a LOESS smooth for each continuous covariate using martingale residuals from a reduced model, reporting whether a non-linear departure was flagged.
-6. **Influence Stability**: Displays the standard flagging threshold ($2/\sqrt{n}$), the covariate and observation index with the maximum absolute standardized DFBETA, and the observation with the maximum likelihood displacement. It also lists the indices of any observations exceeding the DFBETA threshold.
-7. **Outliers**: Lists the observation indices with the largest positive and negative residuals across Martingale, Deviance, Log-Odds, and Normal Deviate residuals.
-8. **Event Sufficiency (Events Per Variable - EPV)**: Reports the Events Per Variable ratio (number of events divided by the number of regression coefficients) and classifies it as *adequate* ($\ge 20$), *marginal* ($10 \text{ to } 20$), or *low* ($< 10$).
-9. **Collinearity**: Displays the Variance Inflation Factors (VIF) or Generalized Variance Inflation Factors (GVIF) for each covariate to check for multicollinearity, along with the thresholds used for detection (VIF $> 5$ or GVIF$^{1/(2 \cdot \text{Df})} > 2.25$).
+The `which` argument controls what is displayed:
+- `"gof"`: Cox-Snell residuals for overall calibration.
+- `"ph"`: Scaled Schoenfeld residuals.
+- `"functional"`: Martingale residuals with a LOESS smooth for checking linearity.
+- `"influence"`: DFBETAs and Likelihood Displacement.
+- `"outliers"`: Deviance residuals.
 
----
-
-## Visualizing Diagnostics
-
-You can generate high-quality `ggplot2` diagnostic plots using the `plot()` method. The S3 `plot()` method supports a `which` parameter to select specific diagnostic panels. The available options for `which` are:
-
-* **`"ph"`**: Plots scaled Schoenfeld residuals against transformed survival time for each covariate to visually check the proportional hazards assumption.
-* **`"functional"`**: Plots adjusted martingale residuals against continuous covariate values to assess the linearity assumption (functional form).
-* **`"influence"`**: Visualizes observation-level influence metrics including standardized DFBETAs (with threshold limits) and likelihood displacement.
-* **`"outliers"`**: Displays four panels of residuals (Martingale, Deviance, Log-Odds, and Normal Deviate) against the linear predictor to detect outlier observations.
-* **`"calibration"`**: Plots the Nelson-Aalen cumulative hazard of the Cox-Snell residuals against the residuals themselves to verify overall model fit.
-
-Below are the plots generated from our `veteran` dataset model, along with instructions on what we see, how to interpret them, and their limitations.
-
-### Proportional Hazards Panel
-This panel plots scaled Schoenfeld residuals against transformed survival time, overlaying a blue LOESS smooth along with its **semi-transparent 95% confidence bands**:
-
-```{r plot-ph}
-plot(audit, which = "ph")
-```
-
-* **What we see in this model**: For our fitted model, all covariates (`trt`, `celltype`, `karno`, `age`) display relatively flat blue LOESS lines centered close to the horizontal 0 reference line. This indicates that the effect of these variables does not change systematically over time.
-* **Interpretation & Consequences**: If a covariate displays a clear rising or falling trend, the proportional hazards assumption is violated. In such cases, reporting a single hazard ratio is misleading because the treatment or risk factor effect changes over time (time-varying effect).
-* **Remedies**: If PH is violated, you can:
-  1. Stratify the model on the violating variable if it is categorical (e.g. `strat(celltype)`).
-  2. Introduce an interaction term with time (time-varying coefficient).
-  3. Partition the follow-up time (e.g. step-function effects before/after 100 days).
-* **Advanced Visual Features**: 
-  1. **Confidence Bands**: The shaded blue region represents the 95% confidence interval of the smooth fit. If the reference line at 0 is entirely contained within this band (as seen here), it indicates any minor wiggles are statistically indistinguishable from zero.
-  2. **Point Subsampling**: In very large datasets ($N > 2000$), the plotting engine automatically subsamples the points plotted in the background to prevent visual clutter and keep file sizes small, while still using the full dataset to estimate the smooth line and its confidence band.
-* **Limitations**: The underlying score test (`cox.zph`) can have low statistical power in small datasets (failing to flag real violations) and can be overly sensitive in very large datasets (flagging minor, clinically irrelevant departures from proportionality).
-
-### Functional Form Panel
-This panel plots martingale residuals from a reduced model (excluding the continuous covariate) against the continuous covariate's values, overlaying a blue LOESS smooth with its **95% confidence bands** and a dashed red linear fit:
+For example, to visually inspect the functional form of our continuous covariates:
 
 ```{r plot-functional}
 plot(audit, which = "functional")
 ```
 
-* **What we see in this model**: 
-  * For **Karnofsky performance score (`karno`)**, the blue LOESS smooth is slightly curved but closely tracks the straight dashed red line, suggesting that a linear representation is reasonable.
-  * For **Age (`age`)**, the blue LOESS line is very close to the red dashed straight line, showing no departure from linearity.
-* **Interpretation & Consequences**: The martingale residuals represent unexplained variation. If the covariate has a linear relationship with the log-hazard, the blue LOESS smooth should track the dashed red linear fit. A curved pattern indicates that the linearity assumption is violated. Fitting a linear term to a nonlinear effect leads to mis-specified models and biased hazard ratios.
-* **Remedies**: 
-  1. Apply a mathematical transformation to the covariate (e.g., log, square root).
-  2. Model the covariate using regression splines (e.g., `ns(karno, df = 3)`).
-  3. Categorize the variable (though this is generally less preferred due to loss of statistical power).
-* **Advanced Visual Features**:
-  1. **Linearity Verification via Confidence Bands**: If the dashed red linear fit lies entirely within the blue LOESS curve's shaded 95% confidence band (as seen for both `karno` and `age` here), it mathematically confirms that the linear assumption is statistically acceptable and wiggles are not significant.
-  2. **Subsampling**: Background points are automatically subsampled if $N > 2000$ to prevent overplotting, while the smooth curve and confidence band are estimated using all observations.
-* **Limitations**: LOESS smooths are highly sensitive to the choice of the `span` parameter (controlling line smoothness) and can show artificial curvature at the boundaries of the data where data points are sparse.
+The plots for `bili` and `protime` clearly show a logarithmic curve rather than a straight line, indicating the model is mis-specified and needs log transformations.
 
-### Influence Panel
-This panel visualizes standardized DFBETAs and Likelihood Displacement (LD) values:
+### 5. Extracting Raw Data for Custom Analysis
+`survAudit` is not a black-box plotter. The `audit` object is a rich list containing all the underlying metrics. You can extract these directly to build custom plots or tables:
 
-```{r plot-influence}
-plot(audit, which = "influence")
+```{r extract}
+# Extract the underlying Proportional Hazards test table
+print(audit$ph$table)
+
+# Extract the deviance residuals to find outliers
+deviance_res <- audit$outliers$deviance
+max_outlier <- which.max(abs(deviance_res))
+print(paste("Largest outlier is at index:", max_outlier))
 ```
 
-* **What we see in this model**: In the DFBETAs panels, almost all points lie within the dotted horizontal lines representing the standard threshold boundary ($\pm 2/\sqrt{n}$). However, a few observations (e.g., around index 20 and 80) show elevated Likelihood Displacement (LD) values, indicating they have a higher impact on the model's likelihood than average.
-* **Interpretation & Consequences**: Spikes in the LD plot or points falling outside the DFBETAs threshold indicate highly influential observations. These observations disproportionately drag the regression coefficients. If your findings depend heavily on a few individual patients, your model is not stable.
-* **Remedies**:
-  1. Check the raw data for these specific observation indices to rule out data entry errors.
-  2. Perform a sensitivity analysis by refitting the model without the influential observations to verify if the primary conclusions change.
-  3. Use robust standard errors (`robust = TRUE` in `coxph`).
-* **Limitations**: The DFBETA threshold $2/\sqrt{n}$ scales with sample size. In very large datasets, the threshold becomes extremely small, leading to flagging many observations that have negligible practical influence on the coefficients.
+### 6. Appending Qualitative Justifications
+Some assumptions (like Independent Censoring) cannot be tested statistically. `survAudit` requires you to document your qualitative justification.
 
-### Outlier Panel
-This panel displays four residual plots (Martingale, Deviance, Log-Odds, and Normal Deviate residuals) plotted against the model's linear predictor:
+You can modify the object directly in R:
 
-```{r plot-outliers}
-plot(audit, which = "outliers")
+```{r justify}
+audit$assumptions$non_identifiable$independent_censoring$justification <- 
+  "Censoring was purely administrative (end of study), satisfying independent censoring."
 ```
 
-* **What we see in this model**: Most residuals lie between -2 and 1.5. However, there are a few observations with deviance and normal deviate residuals exceeding the standard threshold lines (e.g., points below -1.96 or above 1.96).
-* **Interpretation & Consequences**: Outliers are observations with survival times that differ substantially from their predicted risk:
-  - **Highly positive residuals** (e.g., deviance residuals > 1.96) represent patients who died **much earlier** than predicted by the model (under-estimated risk).
-  - **Highly negative residuals** (e.g., deviance residuals < -1.96) represent patients who lived **much longer** than predicted by the model (over-estimated risk) or were censored at a very late time despite having a high predicted risk score.
-  Outliers can point to poorly fit individuals, subgroup populations that behave differently, or unmeasured covariate interactions.
-* **Remedies**:
-  1. Review outlier case histories for clinical anomalies.
-  2. Investigate whether a treatment interaction term is missing (e.g. did a treatment only work on a specific outlier subgroup?).
-  3. Consider alternative survival distributions if outliers are widespread.
-* **Limitations**: In survival models with heavy censoring, residuals (especially martingale and deviance) are highly skewed and asymmetric, making it harder to define a clean symmetric cutoff for outliers compared to standard regression.
+If we print the audit again, this justification is now permanently attached to the object:
 
-### Calibration Panel
-This panel plots the empirical cumulative hazard of the Cox-Snell residuals against the residuals themselves, overlaying a dashed 45-degree reference line:
-
-```{r plot-calibration}
-plot(audit, which = "calibration")
+```{r print-justification}
+print(audit)
 ```
 
-* **What we see in this model**: The plotted points track the dashed 45-degree reference line closely, especially in the lower ranges where the majority of the data lies.
-* **Interpretation & Consequences**: If the model is correctly specified, the Cox-Snell residuals should behave like a censored sample from a standard exponential distribution (with hazard $\lambda=1$). Thus, their cumulative hazard should be a straight line with a slope of 1. If the points deviate significantly from the 45-degree line, it suggests the overall model fit is poor (e.g., missing critical covariates, wrong functional forms, or the wrong baseline hazard distribution).
-* **Remedies**: 
-  1. Re-evaluate the functional forms of continuous covariates.
-  2. Check for missing important interaction terms.
-  3. Consider whether a parametric model (e.g., Weibull or log-normal) might be more appropriate if the baseline hazard does not fit well.
-* **Limitations**: Cox-Snell residuals are a measure of overall model fit, not a specific test for any single assumption. They often deviate from the 45-degree line in the right tail (high residual values) due to small sample sizes and heavy censoring at the end of follow-up, which is normal and does not necessarily indicate a poor fit.
-
----
-
-## Conclusion
-
-By standardizing both testable and non-testable model checks, `survAudit` helps you deliver transparent, robust survival analysis results suitable for clinical protocols and scientific publication. Use `summary()` and `plot()` to diagnose model fit, and document justifications on the object itself to check off non-identifiable assumptions.
+You can now save this object (e.g., `saveRDS(audit, "model_audit.rds")`) and pass it to reviewers, ensuring complete transparency of both the statistics and your clinical reasoning.

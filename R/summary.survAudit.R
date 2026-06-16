@@ -31,27 +31,24 @@ summary.survAudit <- function(object, ...) {
     outliers        = object$outliers,
     epv             = object$epv,
     vif             = object$vif,
-    calibration     = object$calibration,
+    gof             = object$gof,
     assumptions     = object$assumptions,
     alpha           = object$alpha,
     audit_time      = object$audit_time
   )
 
-  # Pre-compute top influential observations (by likelihood displacement)
+  # Pre-compute top influential observations (by max |dfbetas|)
   if (!is.null(object$influence)) {
-    ld <- object$influence$likelihood_displacement
-    n_show <- min(5L, length(ld))
-    top_idx <- order(ld, decreasing = TRUE)[seq_len(n_show)]
-    out$top_influence <- data.frame(
-      obs                     = top_idx,
-      likelihood_displacement = ld[top_idx],
-      stringsAsFactors        = FALSE
-    )
-    # Attach max dfbetas for those obs
     dfb <- object$influence$dfbetas
-    if (!is.null(dfb) && nrow(dfb) >= max(top_idx)) {
-      max_dfb <- apply(abs(dfb[top_idx, , drop = FALSE]), 1, max)
-      out$top_influence$max_abs_dfbetas <- max_dfb
+    if (!is.null(dfb) && nrow(dfb) > 0) {
+      max_abs_dfb <- apply(abs(dfb), 1, max)
+      n_show <- min(5L, length(max_abs_dfb))
+      top_idx <- order(max_abs_dfb, decreasing = TRUE)[seq_len(n_show)]
+      out$top_influence <- data.frame(
+        obs            = top_idx,
+        max_abs_dfbetas = max_abs_dfb[top_idx],
+        stringsAsFactors = FALSE
+      )
     }
   }
 
@@ -165,16 +162,16 @@ print.summary.survAudit <- function(x, ...) {
       if (isTRUE(mi$converged)) "yes" else "no / unknown", "\n")
 
   # ═══════════════════════════════════════════════════════════════
-  # Overall Calibration (Cox-Snell)
+  # Global Goodness-of-Fit (Cox-Snell)
   # ═══════════════════════════════════════════════════════════════
   cat("\n")
-  cat(.section_header("Overall Model Calibration"), "\n\n")
+  cat(.section_header("Global Goodness-of-Fit"), "\n\n")
 
-  if (!is.null(x$calibration)) {
+  if (!is.null(x$gof)) {
     cat("  Cox-Snell residuals computed.\n")
-    cat("  (See plot(audit, which = \"calibration\") for the Nelson-Aalen cumulative hazard plot.)\n")
+    cat("  (See plot(audit, which = \"gof\") for the Nelson-Aalen cumulative hazard plot.)\n")
   } else {
-    cat("  Calibration diagnostics not available.\n")
+    cat("  Goodness-of-fit diagnostics not available.\n")
   }
 
   # ═══════════════════════════════════════════════════════════════
@@ -281,28 +278,19 @@ print.summary.survAudit <- function(x, ...) {
         sprintf("%.4f", inf$max_dfbetas$value),
         " (obs #", inf$max_dfbetas$obs,
         ", ", inf$max_dfbetas$variable, ")\n", sep = "")
-    cat("  Max LD:                ",
-        sprintf("%.4f", inf$max_ld$value),
-        " (obs #", inf$max_ld$obs, ")\n", sep = "")
     cat("  Flagged observations:  ",
         length(inf$flagged_obs), "\n")
 
     # Top influential obs table
     if (!is.null(x$top_influence)) {
-      cat("\n  Top 5 most influential observations (by LD):\n\n")
-      cat("  ", sprintf("%-8s %12s %14s",
-                        "Obs", "LD", "Max |dfbetas|"), "\n")
-      cat("  ", .rule_line(36), "\n")
+      cat("\n  Top 5 most influential observations (by max |dfbetas|):\n\n")
+      cat("  ", sprintf("%-8s %14s",
+                        "Obs", "Max |dfbetas|"), "\n")
+      cat("  ", .rule_line(24), "\n")
       ti <- x$top_influence
       for (i in seq_len(nrow(ti))) {
-        dfb_str <- if (!is.null(ti$max_abs_dfbetas)) {
-          sprintf("%14.4f", ti$max_abs_dfbetas[i])
-        } else {
-          sprintf("%14s", "N/A")
-        }
-        cat("  ", sprintf("%-8d %12.4f %s",
-                          ti$obs[i], ti$likelihood_displacement[i],
-                          dfb_str), "\n")
+        cat("  ", sprintf("%-8d %14.4f",
+                          ti$obs[i], ti$max_abs_dfbetas[i]), "\n")
       }
     }
   } else {
@@ -398,10 +386,10 @@ print.summary.survAudit <- function(x, ...) {
   }
 
   # ═══════════════════════════════════════════════════════════════
-  # Full Assumption Ontology
+  # Full Assumption Classification
   # ═══════════════════════════════════════════════════════════════
   cat("\n")
-  cat(.section_header("Assumption Ontology"), "\n\n")
+  cat(.section_header("Assumption Classification"), "\n\n")
 
   if (!is.null(x$assumptions)) {
     .print_assumption_group("Non-Identifiable",
@@ -411,7 +399,7 @@ print.summary.survAudit <- function(x, ...) {
     .print_assumption_group("Statistically Assessable",
                             x$assumptions$assessable)
   } else {
-    cat("  Assumption ontology not available.\n")
+    cat("  Assumption classification not available.\n")
   }
 
   cat("\n")

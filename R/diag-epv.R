@@ -15,8 +15,8 @@
 #'       (coefficients).}
 #'     \item{ratio}{Numeric. The events-per-variable ratio.}
 #'     \item{classification}{Character. One of \code{"adequate"} (ratio
-#'       >= 20), \code{"marginal"} (10 <= ratio < 20), or \code{"low"}
-#'       (ratio < 10).}
+#'       >= 20), \code{"marginal"} (10 <= ratio < 20), \code{"low"}
+#'       (5 <= ratio < 10), or \code{"unreliable"} (ratio < 5).}
 #'   }
 #'
 #' @keywords internal
@@ -33,8 +33,10 @@
     "adequate"
   } else if (ratio >= 10) {
     "marginal"
-  } else {
+  } else if (ratio >= 5) {
     "low"
+  } else {
+    "unreliable"
   }
 
   list(

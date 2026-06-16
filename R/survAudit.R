@@ -30,8 +30,8 @@
 #'     \item{outliers}{Outlier assessment results or \code{NULL}.}
 #'     \item{epv}{Events-per-variable ratio and classification or
 #'       \code{NULL}.}
-#'     \item{calibration}{Overall model calibration results or \code{NULL}.}
-#'     \item{assumptions}{Structured assumption ontology.}
+#'     \item{gof}{Overall model goodness-of-fit results or \code{NULL}.}
+#'     \item{assumptions}{Structured assumption classification.}
 #'     \item{alpha}{The significance level used.}
 #'     \item{audit_time}{Timestamp of the audit.}
 #'   }
@@ -169,21 +169,21 @@ survAudit <- function(fit, data = NULL, alpha = 0.05, ph_transform = "km") {
    }
  )
 
- calibration <- tryCatch(
-   .compute_calibration(fit),
+ gof <- tryCatch(
+   .compute_gof(fit),
    error = function(e) {
-     warning("Calibration computation failed: ", conditionMessage(e),
+     warning("Goodness-of-Fit computation failed: ", conditionMessage(e),
              call. = FALSE)
      NULL
    }
  )
 
- # ── 7. Build assumption ontology ──────────────────────────────────
+ # ── 7. Build assumption classification ────────────────────────────
  assumptions <- tryCatch(
    .build_assumptions(ph, functional_form, influence, outliers, epv,
                       data_context, alpha, vif),
    error = function(e) {
-     warning("Assumption ontology construction failed: ",
+     warning("Assumption classification construction failed: ",
              conditionMessage(e), call. = FALSE)
      list(assessable = list(), partially_assessable = list(),
           non_identifiable = list())
@@ -200,7 +200,7 @@ survAudit <- function(fit, data = NULL, alpha = 0.05, ph_transform = "km") {
    outliers      = outliers,
    epv           = epv,
    vif           = vif,
-   calibration   = calibration,
+   gof           = gof,
    assumptions   = assumptions,
    alpha         = alpha,
    audit_time    = audit_time

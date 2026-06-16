@@ -1,6 +1,6 @@
-# Assumption ontology builder for survAudit
+# Assumption framework builder for survAudit
 
-#' Build the structured assumption ontology
+#' Build the structured assumption classification
 #'
 #' Classifies Cox model assumptions into three categories:
 #' \strong{assessable} (testable from data), \strong{partially assessable}
@@ -45,7 +45,7 @@
   ff_evidence <- .summarize_functional_form(functional_form)
   functional_form_assumption <- list(
     name = "functional_form",
-    type = "assessable",
+    type = "partially_assessable",
     evidence_summary = ff_evidence,
     diagnostic_key = "functional_form"
   )
@@ -80,7 +80,6 @@
 
   assessable <- list(
     proportional_hazards = proportional_hazards,
-    functional_form = functional_form_assumption,
     influence_stability = influence_stability,
     collinearity = collinearity,
     event_sufficiency = event_sufficiency
@@ -107,6 +106,7 @@
   )
 
   partially_assessable <- list(
+    functional_form = functional_form_assumption,
     outlier_impact = outlier_impact,
     missing_data = missing_data
   )
@@ -203,26 +203,10 @@
     return("No continuous covariates to assess for functional form.")
   }
 
-  departures <- vapply(results, function(r) {
-    isTRUE(r$departure_detected)
-  }, logical(1))
-
-  n_departures <- sum(departures)
-  n_assessed <- length(results)
-
-  if (n_departures == 0) {
-    paste0(
-      "No departures from linearity detected among ",
-      n_assessed, " continuous covariate(s)."
-    )
-  } else {
-    flagged_names <- names(which(departures))
-    paste0(
-      "Departure from linearity detected for ", n_departures,
-      " of ", n_assessed, " continuous covariate(s): ",
-      paste(flagged_names, collapse = ", "), "."
-    )
-  }
+  paste0(
+    "Assessment of ", length(results), " continuous covariate(s) is inherently visual. ",
+    "Use plot(audit, which = 'functional') to inspect martingale residual LOESS smooths for non-linearity."
+  )
 }
 
 #' Summarize influence evidence
@@ -232,15 +216,11 @@
 #' @noRd
 .summarize_influence <- function(influence) {
   max_dfb <- influence$max_dfbetas
-  max_ld <- influence$max_ld
   n_flagged <- length(influence$flagged_obs)
 
   paste0(
     "Max |dfbetas| = ", formatC(max_dfb$value, format = "f", digits = 4),
     " (obs ", max_dfb$obs, ", variable '", max_dfb$variable, "'); ",
-    "max likelihood displacement = ",
-    formatC(max_ld$value, format = "f", digits = 4),
-    " (obs ", max_ld$obs, "); ",
     n_flagged, " observation(s) exceed dfbetas threshold."
   )
 }

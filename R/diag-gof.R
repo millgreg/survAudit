@@ -1,10 +1,10 @@
-# Calibration diagnostics for survAudit
+# Global Goodness-of-Fit diagnostics for survAudit
 
-#' Compute overall model calibration using Cox-Snell residuals
+#' Compute overall model goodness-of-fit using Cox-Snell residuals
 #'
 #' Calculates Cox-Snell residuals as (Event Status - Martingale Residual).
 #' Estimates the Nelson-Aalen cumulative hazard of these residuals to
-#' support the calibration diagnostic plot.
+#' support the goodness-of-fit diagnostic plot.
 #'
 #' @param fit A fitted \code{coxph} object.
 #'
@@ -17,7 +17,7 @@
 #'
 #' @keywords internal
 #' @noRd
-.compute_calibration <- function(fit) {
+.compute_gof <- function(fit) {
   .validate_coxph(fit)
 
   mf <- stats::model.frame(fit)
