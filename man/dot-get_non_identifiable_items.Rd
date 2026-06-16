@@ -15,7 +15,7 @@ A list of lists, each with elements \code{label} and
 }
 \description{
 Returns the list of non-identifiable assumptions with their labels
-and current justification status, drawn from the assumption ontology
+and current justification status, drawn from the assumption classification
 or sensible defaults.
 }
 \keyword{internal}

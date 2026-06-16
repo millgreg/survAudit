@@ -6,7 +6,7 @@
 \usage{
 \method{plot}{survAudit}(
   x,
-  which = c("ph", "functional", "influence", "outliers", "calibration"),
+  which = c("ph", "functional", "influence", "outliers", "gof"),
   ask = interactive(),
   ...
 )
@@ -16,7 +16,7 @@
 
 \item{which}{Character vector specifying which plots to produce.
 Valid values are \code{"ph"}, \code{"functional"},
-\code{"influence"}, \code{"outliers"}, and \code{"calibration"}.
+\code{"influence"}, \code{"outliers"}, and \code{"gof"}.
 Defaults to all five.}
 
 \item{ask}{Logical. If \code{TRUE} (the default in interactive

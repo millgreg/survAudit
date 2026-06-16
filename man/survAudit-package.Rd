@@ -11,7 +11,7 @@ assessment, influence diagnostics, outlier detection, and event sufficiency
 checks.
 }
 \details{
-The package implements a structured assumption ontology that explicitly
+The package implements a structured assumption classification that explicitly
 classifies model assumptions as statistically assessable, partially
 assessable, or non-identifiable, encouraging transparent reporting of
 unverifiable assumptions alongside data-driven diagnostics.
