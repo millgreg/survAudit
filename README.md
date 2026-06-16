@@ -4,18 +4,20 @@
 
 > An Auditing and Transparency Framework for Cox Proportional Hazards Models
 
-`survAudit` provides a unified diagnostic auditing framework for Cox proportional hazards (PH) models. Rather than relying on fragmented diagnostic plots and tests, `survAudit` aggregates critical statistical diagnostics into a structured **Assumption Ontology** and provides a mechanism to document qualitative justifications for non-testable assumptions directly on the R model audit object.
+`survAudit` provides a unified diagnostic auditing framework for Cox proportional hazards (PH) models. Rather than relying on fragmented diagnostic plots and tests, `survAudit` aggregates critical statistical diagnostics into a structured **Assumption Classification** and provides a mechanism to document qualitative justifications for non-testable assumptions directly on the R model audit object.
+
+Full documentation and a reproducible case study are available at: **[https://millgreg.github.io/survAudit](https://millgreg.github.io/survAudit)**
 
 ## Features
 
-1. **Unified Assumption Ontology**: Explicitly organizes model assumptions into:
+1. **Unified Assumption Classification**: Explicitly organizes model assumptions into:
    * **Non-Identifiable**: Assumptions that cannot be verified statistically (e.g., Independent Censoring, Absence of Unmeasured Confounding) and require qualitative justification.
    * **Partially Assessable**: Assumptions informed by metrics but requiring clinical/domain judgment (e.g., Outlier Impact, Missing Data).
    * **Statistically Assessable**: Assumptions rigorously testable from data (e.g., Proportional Hazards, Functional Form, Influence Stability, Event Sufficiency).
 2. **Advanced Diagnostics**:
    * **Collinearity (GVIF)**: Implements the Generalized Variance Inflation Factor (GVIF) algorithm (matching `car` package behavior) to correctly group dummy variables of factor predictors and prevent false collinearity flags.
-   * **Functional Form (Linearity)**: Martian residuals from multivariate reduced models are compared against continuous predictors using LOESS smooths with 95% confidence bands to identify departures from linearity.
-   * **Visual Calibration**: Outlier residual panels (Martingale, Deviance, Log-Odds, Normal Deviate) and Influence diagnostics (DFBETAs and Likelihood Displacement).
+   * **Functional Form (Linearity)**: Martingale residuals from multivariate reduced models are compared against continuous predictors using LOESS smooths with 95% confidence bands to identify departures from linearity visually.
+   * **Visual Diagnostics**: Overall goodness-of-fit via Cox-Snell residuals, Outlier panels (Deviance, Log-Odds), and Influence diagnostics (DFBETAs and Likelihood Displacement).
 3. **Auditable R Objects**: Allows documenting qualitative justifications directly on the R object. Saving the object via `saveRDS()` preserves the complete, clinical-grade audit trail alongside the model.
 
 ---
@@ -26,7 +28,7 @@ You can install the source package directly in R:
 
 ```R
 # Install the built source archive
-install.packages("survAudit_0.1.0.tar.gz", repos = NULL, type = "source")
+install.packages("survAudit_1.0.0.tar.gz", repos = NULL, type = "source")
 ```
 
 ---
@@ -37,14 +39,16 @@ install.packages("survAudit_0.1.0.tar.gz", repos = NULL, type = "source")
 library(survival)
 library(survAudit)
 
-# 1. Fit a Cox Proportional Hazards Model
+# 1. Fit a naive Cox Proportional Hazards Model
+data(pbc, package = "survival")
+pbc$status <- ifelse(pbc$status == 2, 1, 0)
 fit <- coxph(
-  Surv(time, status) ~ trt + celltype + karno + age,
-  data = veteran
+  Surv(time, status) ~ age + bili + albumin + protime + factor(edema),
+  data = pbc
 )
 
 # 2. Run the Diagnostic Audit
-audit <- survAudit(fit, data = veteran)
+audit <- survAudit(fit, data = pbc)
 
 # 3. View Compact Console Output
 print(audit)
@@ -53,11 +57,13 @@ print(audit)
 summary(audit)
 
 # 5. Plot Diagnostics (ggplot2 panels)
-plot(audit, which = "ph")          # Proportional Hazards
-plot(audit, which = "functional")  # Linearity
+plot(audit, which = "gof")         # Cox-Snell Overall Calibration
+plot(audit, which = "ph")          # Proportional Hazards (Schoenfeld)
+plot(audit, which = "functional")  # Linearity (Martingale)
 plot(audit, which = "influence")   # DFBETAs & Likelihood Displacement
-plot(audit, which = "outliers")    # Martingale, Deviance, Log-Odds, Normal Deviates
 ```
+
+For a comprehensive walkthrough of interpreting these outputs, please read the [Introduction Vignette / Case Study](https://millgreg.github.io/survAudit/articles/survAudit-introduction.html).
 
 ### Documenting Qualitative Justifications
 
