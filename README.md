@@ -24,10 +24,18 @@ Full documentation and a reproducible case study are available at: **[https://mi
 
 ## Installation
 
-You can install the source package directly in R:
+You can install the development version of `survAudit` directly from GitHub using the `remotes` package:
 
 ```R
-# Install the built source archive
+# Install from GitHub
+if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
+remotes::install_github("millgreg/survAudit")
+```
+
+Alternatively, if you have the source archive downloaded, you can install it manually:
+
+```R
+# Install the built source archive locally
 install.packages("survAudit_1.0.0.tar.gz", repos = NULL, type = "source")
 ```
 
