@@ -18,30 +18,25 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Survival Analysis and the Cox Model: A Beginner's Introduction
+## Survival Analysis and the Cox Model
 
-When conducting research where the outcome of interest is the **time until an event occurs**, standard regression methods fall short because event times are often **censored**—some subjects complete the study without ever experiencing the event.
+When conducting research where the outcome of interest is the time until an event occurs, the most widely used method is the **Cox Proportional Hazards (PH) model**. For a Cox model's estimates to be valid, the model must satisfy several structural and mathematical assumptions. 
 
-The most widely used method for this data is the **Cox Proportional Hazards (PH) model**. Instead of predicting the exact time of an event, it estimates the **hazard ratio (HR)**. For a Cox model's hazard ratios to be valid, the model must satisfy several mathematical assumptions. If violated, conclusions can be severely biased.
-
----
-
-## Why Use `survAudit`?
-
-Checking Cox model assumptions usually requires running fragmented tests from multiple packages. `survAudit` solves this by implementing:
+Checking these assumptions usually requires running fragmented tests from multiple packages. `survAudit` solves this by providing:
 
 1. **A Unified Assumption Classification**: Organizing assumptions into *Non-Identifiable* (purely qualitative), *Partially Assessable* (combining data and judgment), and *Statistically Assessable* (testable from data).
 2. **Comprehensive Diagnostics**: It aggregates proportional hazards, functional form, influence, outliers, and generalized collinearity (GVIF) into one run.
-3. **Auditable R Objects**: It returns an S3 object containing all raw diagnostic metrics (allowing custom extraction) and lets analysts append qualitative justifications directly to the object before saving it.
+3. **Auditable S3 Objects**: It returns an object containing all raw diagnostic metrics and lets analysts append qualitative justifications directly to the object before saving it.
 
 ---
 
-## Step-by-Step Tutorial
+## Case Study Workflow
 
-We will demonstrate `survAudit` using the classic `pbc` dataset from the `survival` package, which records survival data for patients with primary biliary cholangitis.
+In this vignette, we demonstrate how `survAudit` changes the analytical workflow of a typical survival analysis by revealing model limitations that are not apparent from standard Cox regression output. We use the classic `pbc` dataset from the `survival` package, which records survival data for patients with primary biliary cholangitis.
 
-### 1. Fit the Cox Model
-We fit a Cox model using a mix of continuous covariates (`age`, `bili`, `albumin`, `protime`) and a categorical factor (`edema`):
+### 1. Fit the Initial Model
+
+A standard approach might begin by fitting a multivariate Cox model using a mix of continuous covariates (`age`, `bili`, `albumin`, `protime`) and a categorical factor (`edema`):
 
 ```{r setup, message=FALSE, warning=FALSE}
 library(survival)
@@ -58,68 +53,64 @@ fit <- coxph(
 )
 ```
 
-### 2. Run the Audit
-Run the diagnostic audit using `survAudit()`.
+In many applied analyses, reporting may proceed at this stage, with interpretation focused primarily on coefficient estimates and significance tests.
 
-> [!NOTE]
-> Supplying `data = pbc` is optional but highly recommended to ensure complete case extraction for functional form plots.
+### 2. Run the Initial Audit
+
+However, `survAudit` goes beyond asking whether a model is significant. It systematically answers: *What aspects of this model require attention, and what can be learned from the available data versus what requires scientific justification?* 
+
+We run the diagnostic audit using `survAudit()`. Supplying `data = pbc` is highly recommended to ensure complete case extraction for functional form plots.
 
 ```{r audit}
 audit <- survAudit(fit, data = pbc)
-```
-
-### 3. Review the Summary
-The `summary()` method prints a concise console dashboard detailing the status of every assumption:
-
-```{r summary}
 summary(audit)
 ```
 
-### 4. Visual Diagnostics
-While the summary provides immediate flags, `survAudit` provides a dedicated `plot()` method to visually explore the violations. 
+Running `survAudit()` immediately identifies several diagnostic findings that indicate areas where the model may require refinement. For example, the functional form diagnostic detects severe departures from linearity for both bilirubin and prothrombin time, while the proportional hazards test flags a global violation.
 
-The `which` argument controls what is displayed:
-- `"gof"`: Cox-Snell residuals for overall calibration.
-- `"ph"`: Scaled Schoenfeld residuals.
-- `"functional"`: Martingale residuals with a LOESS smooth for checking linearity.
-- `"influence"`: DFBETAs and Likelihood Displacement.
-- `"outliers"`: Deviance residuals.
-
-For example, to visually inspect the functional form of our continuous covariates:
+We can visually explore the functional form violations:
 
 ```{r plot-functional}
 plot(audit, which = "functional")
 ```
 
-The plots for `bili` and `protime` clearly show a logarithmic curve rather than a straight line, indicating the model is mis-specified and needs log transformations.
+Furthermore, the audit flags multiple highly influential observations and outliers. This explicitly prompts the analyst to check the raw data. Rather than automatically excluding these observations, `survAudit` preserves them as diagnostic findings requiring contextual evaluation.
 
-### 5. Extracting Raw Data for Custom Analysis
-`survAudit` is not a black-box plotter. The `audit` object is a rich list containing all the underlying metrics. You can extract these directly to build custom plots or tables:
+### 3. Model Respecification: An Iterative Process
 
-```{r extract}
-# Extract the underlying Proportional Hazards test table
-print(audit$ph$table)
+Crucially, the audit provides a transparent roadmap for model respecification. First, we applied clinically plausible logarithmic transformations to bilirubin and prothrombin time to address the detected departures from linearity.
 
-# Extract the deviance residuals to find outliers
-deviance_res <- audit$outliers$deviance
-max_outlier <- which.max(abs(deviance_res))
-print(paste("Largest outlier is at index:", max_outlier))
+```{r respecify}
+# Fit an updated model with log transformations
+fit2 <- coxph(
+  Surv(time, status) ~ age + log(bili) + albumin + log(protime) + factor(edema),
+  data = pbc
+)
+
+# Re-audit the updated model
+audit2 <- survAudit(fit2, data = pbc)
+summary(audit2)
 ```
 
-### 6. Appending Qualitative Justifications
-Some assumptions (like Independent Censoring) cannot be tested statistically. `survAudit` requires you to document your qualitative justification.
+A subsequent re-audit of the updated model reveals the impact of these changes. Importantly, the re-audit demonstrates that model correction is iterative rather than binary: while the functional form violations were substantially reduced, the remaining proportional hazards violation for `log(protime)` indicates that additional modeling decisions—such as introducing a time-dependent effect or stratification—may still be required.
 
-You can modify the object directly in R:
+### 4. The Auditable S3 Object
+
+Importantly, `survAudit` does not just produce plots or terminal output; it returns a rich S3 object. This allows users to inspect individual diagnostic components, reuse computed quantities, and integrate audit results into custom reporting workflows.
+
+For example, you can extract the underlying Proportional Hazards test table:
+
+```{r extract}
+print(audit2$ph$table)
+```
+
+Some assumptions (like Independent Censoring) cannot be tested statistically. `survAudit` requires you to document your qualitative justification. You can append these directly to the object:
 
 ```{r justify}
-audit$assumptions$non_identifiable$independent_censoring$justification <- 
+audit2$assumptions$non_identifiable$independent_censoring$justification <- 
   "Censoring was purely administrative (end of study), satisfying independent censoring."
 ```
 
-If we print the audit again, this justification is now permanently attached to the object:
+If we print the audit again, this justification is now permanently attached to the object, ensuring complete transparency of both the statistics and your clinical reasoning.
 
-```{r print-justification}
-print(audit)
-```
-
-You can now save this object (e.g., `saveRDS(audit, "model_audit.rds")`) and pass it to reviewers, ensuring complete transparency of both the statistics and your clinical reasoning.
+By formalizing this iterative diagnostic process, `survAudit` reduces the likelihood that important model inadequacies remain undetected during routine analysis.
