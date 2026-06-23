@@ -119,17 +119,7 @@ print.survAudit <- function(x, ...) {
     for (cv in covar_rows) {
       p_val <- tbl[cv, "p"]
       if (!is.na(p_val) && p_val < alpha) {
-        trend_str <- ""
-        if (!is.null(x$ph$trends) && nrow(x$ph$trends) > 0L) {
-          idx <- which(x$ph$trends$variable == cv)
-          if (length(idx) == 1L && x$ph$trends$direction[idx] != "none") {
-            trend_str <- paste0(
-              " (", x$ph$trends$direction[idx], " effect over time)"
-            )
-          }
-        }
-        cat("    ", cv, ": p = ", .format_p(p_val), trend_str, "\n",
-            sep = "")
+        cat("    ", cv, ": p = ", .format_p(p_val), "\n", sep = "")
       }
     }
   } else {

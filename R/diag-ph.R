@@ -63,40 +63,11 @@
     )
   }
 
-  # Assess trend direction for each covariate
-  n_covariates <- length(covariate_names)
-  slopes <- numeric(n_covariates)
-  directions <- character(n_covariates)
-
-  for (i in seq_len(n_covariates)) {
-    resid_col <- schoenfeld_resid[, i]
-    lm_fit <- stats::lm(resid_col ~ transformed_time)
-    slope <- stats::coef(lm_fit)[2]
-    slopes[i] <- slope
-
-    # Get p-value of the slope
-    lm_summary <- summary(lm_fit)
-    slope_p <- lm_summary$coefficients[2, 4]
-
-    if (slope_p <= 0.10) {
-      directions[i] <- if (slope > 0) "increasing" else "decreasing"
-    } else {
-      directions[i] <- "none"
-    }
-  }
-
-  trends <- data.frame(
-    variable = covariate_names,
-    slope = slopes,
-    direction = directions,
-    stringsAsFactors = FALSE
-  )
-
   list(
     zph = zph,
     table = table_mat,
     global_p = global_p,
     transform = transform,
-    trends = trends
+    trends = NULL
   )
 }

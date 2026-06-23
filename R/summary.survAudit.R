@@ -116,10 +116,6 @@ print.summary.survAudit <- function(x, ...) {
         sprintf("[%.2f, %.2f]", dc$time_iqr[1], dc$time_iqr[2]), "\n")
     cat("  Tied event times:      ", dc$n_ties,
         " (", sprintf("%.1f%%", dc$tie_fraction * 100), ")\n", sep = "")
-    if (!is.null(dc$counting_process)) {
-      cat("  Counting process:      ",
-          if (isTRUE(dc$counting_process)) "yes" else "no", "\n")
-    }
     if (!is.null(dc$missing_data)) {
       if (is.character(dc$missing_data)) {
         cat("  Missing data:          ", dc$missing_data, "\n")
@@ -169,7 +165,6 @@ print.summary.survAudit <- function(x, ...) {
 
   if (!is.null(x$gof)) {
     cat("  Cox-Snell residuals computed.\n")
-    cat("  (See plot(audit, which = \"gof\") for the Nelson-Aalen cumulative hazard plot.)\n")
   } else {
     cat("  Goodness-of-fit diagnostics not available.\n")
   }
@@ -181,7 +176,13 @@ print.summary.survAudit <- function(x, ...) {
   cat(.section_header("Proportional Hazards (cox.zph)"), "\n\n")
 
   if (!is.null(x$ph)) {
-    cat("  Transform: ", x$ph$transform, "\n\n")
+    tname <- switch(x$ph$transform,
+                    "km" = "Kaplan-Meier",
+                    "log" = "Log",
+                    "rank" = "Rank",
+                    "identity" = "Identity",
+                    x$ph$transform)
+    cat("  Transform: ", tname, "\n\n")
 
     tbl <- x$ph$table
     # Sort tbl by p-value ascending, keeping "GLOBAL" at the bottom
@@ -219,17 +220,6 @@ print.summary.survAudit <- function(x, ...) {
                         .format_p(tbl_sorted[rn, "p"])), "\n")
     }
 
-    # Trends
-    if (!is.null(x$ph$trends) && nrow(x$ph$trends) > 0L) {
-      trends <- x$ph$trends[x$ph$trends$direction != "none", ]
-      if (nrow(trends) > 0L) {
-        cat("\n  Detected trends:\n")
-        for (i in seq_len(nrow(trends))) {
-          cat("    ", trends$variable[i], ": ",
-              trends$direction[i], " effect over time\n", sep = "")
-        }
-      }
-    }
   } else {
     cat("  Proportional hazards diagnostics not available.\n")
   }
@@ -306,9 +296,6 @@ print.summary.survAudit <- function(x, ...) {
   if (!is.null(x$outliers)) {
     ol <- x$outliers
     
-    cat("  *Note: Deviance residuals are the most robust symmetric measure for outliers,\n")
-    cat("         especially in heavily censored datasets.*\n\n")
-    
     cat("  Flagged deviance residuals (|resid| > 1.96):       ",
         length(ol$flagged$deviance), "\n")
     cat("  Flagged log-odds residuals (|resid| > 3.66):       ",
@@ -341,7 +328,7 @@ print.summary.survAudit <- function(x, ...) {
     cat("  Events:                       ", x$epv$n_events, "\n")
     cat("  Estimated parameters (coefs): ", x$epv$n_parameters, "\n")
     cat("  Events Per Variable (EPV):    ", sprintf("%.1f", x$epv$ratio), "\n")
-    cat("  Assessment:                   ", x$epv$classification, "\n")
+    cat("  Assessment:                   ", x$epv$classification, " (target: >= 20)\n")
   } else {
     cat("  EPV diagnostics not available.\n")
   }
