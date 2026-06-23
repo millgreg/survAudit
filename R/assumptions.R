@@ -176,18 +176,19 @@
     n_total <- nrow(table_mat)
   }
 
-  if (global_p < alpha) {
-    paste0(
-      "Global cox.zph test significant (p = ", p_str,
-      "); ", n_flagged, " of ", n_total,
-      " covariate(s) flagged at alpha = ", alpha, "."
-    )
+  global_str <- if (global_p < alpha) {
+    paste0("Global cox.zph test significant (p = ", p_str, ")")
   } else {
-    paste0(
-      "Global cox.zph test not significant (p = ", p_str,
-      "); no covariate-level violations detected at alpha = ", alpha, "."
-    )
+    paste0("Global cox.zph test not significant (p = ", p_str, ")")
   }
+
+  covar_str <- if (n_flagged > 0) {
+    paste0(n_flagged, " of ", n_total, " covariate(s) flagged at alpha = ", alpha, ".")
+  } else {
+    paste0("no covariate-level violations detected at alpha = ", alpha, ".")
+  }
+
+  paste0(global_str, "; ", covar_str)
 }
 
 #' Summarize functional form evidence

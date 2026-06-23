@@ -116,11 +116,16 @@ print.survAudit <- function(x, ...) {
     covar_rows <- rownames(tbl)
     covar_rows <- covar_rows[covar_rows != "GLOBAL"]
 
+    found_any <- FALSE
     for (cv in covar_rows) {
       p_val <- tbl[cv, "p"]
       if (!is.na(p_val) && p_val < alpha) {
         cat("    ", cv, ": p = ", .format_p(p_val), "\n", sep = "")
+        found_any <- TRUE
       }
+    }
+    if (!found_any) {
+      cat("    No covariate-level violations detected (p >= ", alpha, ")\n", sep = "")
     }
   } else {
     cat("    not available\n")
