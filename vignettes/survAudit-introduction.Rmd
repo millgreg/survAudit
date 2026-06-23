@@ -94,6 +94,12 @@ summary(audit2)
 
 A subsequent re-audit of the updated model reveals the impact of these changes. Importantly, the re-audit demonstrates that model correction is iterative rather than binary: while the functional form violations were substantially reduced, the remaining proportional hazards violation for `log(protime)` indicates that additional modeling decisions—such as introducing a time-dependent effect or stratification—may still be required.
 
+We can also verify the global goodness-of-fit of the updated model using Cox-Snell residuals:
+
+```{r plot-gof}
+plot(audit2, which = "gof")
+```
+
 ### 4. The Auditable S3 Object
 
 Importantly, `survAudit` does not just produce plots or terminal output; it returns a rich S3 object. This allows users to inspect individual diagnostic components, reuse computed quantities, and integrate audit results into custom reporting workflows.

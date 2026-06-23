@@ -179,6 +179,13 @@ plot.survAudit <- function(x,
     }))
   }
 
+  tname <- switch(ph$transform,
+                  "km" = "Kaplan-Meier",
+                  "log" = "Log",
+                  "rank" = "Rank",
+                  "identity" = "Identity",
+                  ph$transform)
+
   ggplot(df, aes(x = .data$time, y = .data$residual)) +
     geom_point(data = df_points, colour = col_point, alpha = alpha_pt, size = 1) +
     geom_smooth(method = "loess", formula = y ~ x,
@@ -189,7 +196,7 @@ plot.survAudit <- function(x,
     facet_wrap(~ variable, scales = "free_y") +
     labs(
       title = "Proportional Hazards Diagnostics: Scaled Schoenfeld Residuals",
-      x     = paste0("Transformed Time (", ph$transform, ")"),
+      x     = paste0("Transformed Time (", tname, ")"),
       y     = "Scaled Schoenfeld Residual"
     ) +
     theme_minimal() +
@@ -313,9 +320,9 @@ plot.survAudit <- function(x,
     ) +
     facet_wrap(~ variable, scales = "free_y") +
     labs(
-      title = "Influence Diagnostics",
+      title = "Influence Diagnostics: DFBETAs",
       x     = "Observation Index",
-      y     = "Value"
+      y     = "Standardized DFBETA"
     ) +
     theme_minimal() +
     theme(
@@ -400,14 +407,12 @@ plot.survAudit <- function(x,
     geom_abline(intercept = 0, slope = 1, linetype = "dashed",
                 colour = col_ref, linewidth = 0.8) +
     labs(
-      title = "Global Goodness-of-Fit",
-      subtitle = "Nelson-Aalen Cumulative Hazard of Cox-Snell Residuals",
+      title = "Global Goodness-of-Fit: Cox-Snell Residuals",
       x     = "Cox-Snell Residual",
       y     = "Cumulative Hazard"
     ) +
     theme_minimal() +
     theme(
-      plot.title    = element_text(size = 12, face = "bold"),
-      plot.subtitle = element_text(size = 10, face = "italic")
+      plot.title    = element_text(size = 12, face = "bold")
     )
 }
