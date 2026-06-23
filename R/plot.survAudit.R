@@ -111,7 +111,7 @@ plot.survAudit <- function(x,
     return(invisible(NULL))
   }
 
-  if (isTRUE(ask)) {
+  if (isTRUE(ask) && length(plots) > 1L) {
     oask <- grDevices::devAskNewPage(TRUE)
     on.exit(grDevices::devAskNewPage(oask))
   }
