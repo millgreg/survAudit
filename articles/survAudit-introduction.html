@@ -157,7 +157,7 @@ extraction for functional form plots.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">audit</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ── survAudit: Detailed Diagnostic Report ──────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Audit time:  2026-06-23 10:15:22 </span></span>
+<span><span class="co">#&gt;   Audit time:  2026-06-23 11:56:17 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Data Context ───────────────────────────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
@@ -168,7 +168,6 @@ extraction for functional form plots.</p>
 <span><span class="co">#&gt;   Median time:            1730.00 </span></span>
 <span><span class="co">#&gt;   Time IQR:               [1094.25, 2617.25] </span></span>
 <span><span class="co">#&gt;   Tied event times:      10 (6.2%)</span></span>
-<span><span class="co">#&gt;   Counting process:       no </span></span>
 <span><span class="co">#&gt;   Missing data:</span></span>
 <span><span class="co">#&gt;     protime: 2 missing (0.5%)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -182,11 +181,10 @@ extraction for functional form plots.</p>
 <span><span class="co">#&gt; ── Global Goodness-of-Fit ─────────────────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Cox-Snell residuals computed.</span></span>
-<span><span class="co">#&gt;   (See plot(audit, which = "gof") for the Nelson-Aalen cumulative hazard plot.)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Proportional Hazards (cox.zph) ─────────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Transform:  km </span></span>
+<span><span class="co">#&gt;   Transform:  Kaplan-Meier </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    Variable                     chisq     df          p </span></span>
 <span><span class="co">#&gt;    ──────────────────────────────────────────────────── </span></span>
@@ -196,10 +194,6 @@ extraction for functional form plots.</p>
 <span><span class="co">#&gt;    factor(edema)                3.121      2      0.210 </span></span>
 <span><span class="co">#&gt;    age                          0.067      1      0.796 </span></span>
 <span><span class="co">#&gt;    GLOBAL                      22.248      6      0.001 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Detected trends:</span></span>
-<span><span class="co">#&gt;     bili: increasing effect over time</span></span>
-<span><span class="co">#&gt;     protime: decreasing effect over time</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Functional Form Assessment ─────────────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
@@ -228,9 +222,6 @@ extraction for functional form plots.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Outlier Assessment ─────────────────────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   *Note: Deviance residuals are the most robust symmetric measure for outliers,</span></span>
-<span><span class="co">#&gt;          especially in heavily censored datasets.*</span></span>
-<span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Flagged deviance residuals (|resid| &gt; 1.96):        19 </span></span>
 <span><span class="co">#&gt;   Flagged log-odds residuals (|resid| &gt; 3.66):        9 </span></span>
 <span><span class="co">#&gt;   Flagged normal deviate residuals (|resid| &gt; 1.96):  9 </span></span>
@@ -250,7 +241,7 @@ extraction for functional form plots.</p>
 <span><span class="co">#&gt;   Events:                        160 </span></span>
 <span><span class="co">#&gt;   Estimated parameters (coefs):  6 </span></span>
 <span><span class="co">#&gt;   Events Per Variable (EPV):     26.7 </span></span>
-<span><span class="co">#&gt;   Assessment:                    adequate </span></span>
+<span><span class="co">#&gt;   Assessment:                    adequate  (target: &gt;= 20)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Collinearity Diagnostics (VIF) ─────────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
@@ -316,7 +307,7 @@ detected departures from linearity.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">audit2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ── survAudit: Detailed Diagnostic Report ──────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Audit time:  2026-06-23 10:15:23 </span></span>
+<span><span class="co">#&gt;   Audit time:  2026-06-23 11:56:19 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Data Context ───────────────────────────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
@@ -327,7 +318,6 @@ detected departures from linearity.</p>
 <span><span class="co">#&gt;   Median time:            1730.00 </span></span>
 <span><span class="co">#&gt;   Time IQR:               [1094.25, 2617.25] </span></span>
 <span><span class="co">#&gt;   Tied event times:      10 (6.2%)</span></span>
-<span><span class="co">#&gt;   Counting process:       no </span></span>
 <span><span class="co">#&gt;   Missing data:</span></span>
 <span><span class="co">#&gt;     protime: 2 missing (0.5%)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -341,11 +331,10 @@ detected departures from linearity.</p>
 <span><span class="co">#&gt; ── Global Goodness-of-Fit ─────────────────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Cox-Snell residuals computed.</span></span>
-<span><span class="co">#&gt;   (See plot(audit, which = "gof") for the Nelson-Aalen cumulative hazard plot.)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Proportional Hazards (cox.zph) ─────────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Transform:  km </span></span>
+<span><span class="co">#&gt;   Transform:  Kaplan-Meier </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    Variable                     chisq     df          p </span></span>
 <span><span class="co">#&gt;    ──────────────────────────────────────────────────── </span></span>
@@ -355,9 +344,6 @@ detected departures from linearity.</p>
 <span><span class="co">#&gt;    log(bili)                    1.050      1      0.306 </span></span>
 <span><span class="co">#&gt;    age                          0.001      1      0.974 </span></span>
 <span><span class="co">#&gt;    GLOBAL                      14.199      6      0.027 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Detected trends:</span></span>
-<span><span class="co">#&gt;     log(protime): decreasing effect over time</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Functional Form Assessment ─────────────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
@@ -386,9 +372,6 @@ detected departures from linearity.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Outlier Assessment ─────────────────────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   *Note: Deviance residuals are the most robust symmetric measure for outliers,</span></span>
-<span><span class="co">#&gt;          especially in heavily censored datasets.*</span></span>
-<span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Flagged deviance residuals (|resid| &gt; 1.96):        20 </span></span>
 <span><span class="co">#&gt;   Flagged log-odds residuals (|resid| &gt; 3.66):        12 </span></span>
 <span><span class="co">#&gt;   Flagged normal deviate residuals (|resid| &gt; 1.96):  12 </span></span>
@@ -408,7 +391,7 @@ detected departures from linearity.</p>
 <span><span class="co">#&gt;   Events:                        160 </span></span>
 <span><span class="co">#&gt;   Estimated parameters (coefs):  6 </span></span>
 <span><span class="co">#&gt;   Events Per Variable (EPV):     26.7 </span></span>
-<span><span class="co">#&gt;   Assessment:                    adequate </span></span>
+<span><span class="co">#&gt;   Assessment:                    adequate  (target: &gt;= 20)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Collinearity Diagnostics (VIF) ─────────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>

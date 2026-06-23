@@ -88,7 +88,7 @@
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ── survAudit: Detailed Diagnostic Report ──────────────────────── </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Audit time:  2026-06-23 10:15:19 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Audit time:  2026-06-23 11:56:15 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ── Data Context ───────────────────────────────────────────────── </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -99,7 +99,6 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Median time:            80.00 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Time IQR:               [25.00, 144.00] </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Tied event times:      55 (43.0%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Counting process:       no </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Missing data:          none (complete case data)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ── Model Information ──────────────────────────────────────────── </span>
@@ -112,11 +111,10 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> ── Global Goodness-of-Fit ─────────────────────────────────────── </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Cox-Snell residuals computed.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   (See plot(audit, which = "gof") for the Nelson-Aalen cumulative hazard plot.)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ── Proportional Hazards (cox.zph) ─────────────────────────────── </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Transform:  km </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Transform:  Kaplan-Meier </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    Variable                     chisq     df          p </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    ──────────────────────────────────────────────────── </span>
@@ -125,10 +123,6 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>    age                          1.874      1      0.171 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    trt                          0.284      1      0.594 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    GLOBAL                      29.179      6     &lt;0.001 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Detected trends:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     karno: increasing effect over time</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     age: increasing effect over time</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ── Functional Form Assessment ─────────────────────────────────── </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -155,9 +149,6 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ── Outlier Assessment ─────────────────────────────────────────── </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   *Note: Deviance residuals are the most robust symmetric measure for outliers,</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          especially in heavily censored datasets.*</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Flagged deviance residuals (|resid| &gt; 1.96):        11 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Flagged log-odds residuals (|resid| &gt; 3.66):        5 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Flagged normal deviate residuals (|resid| &gt; 1.96):  5 </span>
@@ -177,7 +168,7 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Events:                        128 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Estimated parameters (coefs):  6 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Events Per Variable (EPV):     21.3 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Assessment:                    adequate </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Assessment:                    adequate  (target: &gt;= 20)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ── Collinearity Diagnostics (VIF) ─────────────────────────────── </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
