@@ -111,10 +111,14 @@ residuals from a null Cox model against each continuous covariate. A LOESS
 smooth and a linear reference line are overlaid.</p></li>
 <li><p><strong>Influence Diagnostics (<code>which = "influence"</code>):</strong> Plots
 standardized DFBETAs for each observation across all covariates. Dotted
-horizontal lines indicate the threshold for high influence (\(\pm 2/\sqrt{n}\)).</p></li>
+horizontal lines indicate the threshold for high influence (\(\pm 2/\sqrt{n}\)).
+Analysts should look for observations that stray far from the main cluster and
+cross these thresholds.</p></li>
 <li><p><strong>Outlier Assessment (<code>which = "outliers"</code>):</strong> Plots martingale,
 deviance, log-odds, and normal deviate residuals against the linear predictor.
-Dashed reference lines indicate common thresholds for extreme values.</p></li>
+Dashed reference lines indicate common thresholds for extreme values
+(e.g., \(\pm 1.96\) for deviance and normal deviate, \(\pm 3.66\) for log-odds).
+Analysts should visually check for points that systematically exceed these bands.</p></li>
 <li><p><strong>Global Goodness-of-Fit (<code>which = "gof"</code>):</strong> Plots the cumulative
 hazard of the Cox-Snell residuals against the residuals themselves, with a
 dashed 45-degree reference line.</p></li>
