@@ -17,7 +17,7 @@ Full documentation and a reproducible case study are available at: **[https://mi
 2. **Advanced Diagnostics**:
    * **Collinearity (GVIF)**: Implements the Generalized Variance Inflation Factor (GVIF) algorithm (matching `car` package behavior) to correctly group dummy variables of factor predictors and prevent false collinearity flags.
    * **Functional Form (Linearity)**: Martingale residuals from multivariate reduced models are compared against continuous predictors using LOESS smooths with 95% confidence bands to identify departures from linearity visually.
-   * **Visual Diagnostics**: Overall goodness-of-fit via Cox-Snell residuals, Outlier panels (Deviance, Log-Odds), and Influence diagnostics (DFBETAs and Likelihood Displacement).
+   * **Visual Diagnostics**: Overall goodness-of-fit via Cox-Snell residuals, Outlier panels (Deviance, Log-Odds), and Influence diagnostics (DFBETAs).
 3. **Auditable R Objects**: Allows documenting qualitative justifications directly on the R object. Saving the object via `saveRDS()` preserves the complete, clinical-grade audit trail alongside the model.
 
 ---
@@ -68,7 +68,7 @@ summary(audit)
 plot(audit, which = "gof")         # Cox-Snell Overall Calibration
 plot(audit, which = "ph")          # Proportional Hazards (Schoenfeld)
 plot(audit, which = "functional")  # Linearity (Martingale)
-plot(audit, which = "influence")   # DFBETAs & Likelihood Displacement
+plot(audit, which = "influence")   # DFBETAs
 ```
 
 For a comprehensive walkthrough of interpreting these outputs, please read the [Introduction Vignette / Case Study](https://millgreg.github.io/survAudit/articles/survAudit-introduction.html).
