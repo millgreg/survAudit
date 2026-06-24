@@ -31,10 +31,29 @@ invisibly.
 }
 \description{
 Produces \code{ggplot2} diagnostic panels for a Cox PH model audit.
-Four plot types are available: proportional hazards (Schoenfeld
-residuals), functional form (martingale residuals), influence
-diagnostics (DFBETAs and likelihood displacement), and outlier
-assessment (multiple residual types).
+Five plot types are available: proportional hazards, functional form,
+influence diagnostics, outlier assessment, and global goodness-of-fit.
+}
+\details{
+\strong{Description of Plots:}
+\itemize{
+\item \strong{Proportional Hazards (\code{which = "ph"}):} Plots scaled
+Schoenfeld residuals against transformed time. A LOESS smooth is overlaid,
+and a dashed reference line is positioned at the overall model coefficient
+(\eqn{\hat{\beta}}).
+\item \strong{Functional Form (\code{which = "functional"}):} Plots martingale
+residuals from a null Cox model against each continuous covariate. A LOESS
+smooth and a linear reference line are overlaid.
+\item \strong{Influence Diagnostics (\code{which = "influence"}):} Plots
+standardized DFBETAs for each observation across all covariates. Dotted
+horizontal lines indicate the threshold for high influence (\eqn{\pm 2/\sqrt{n}}).
+\item \strong{Outlier Assessment (\code{which = "outliers"}):} Plots martingale,
+deviance, log-odds, and normal deviate residuals against the linear predictor.
+Dashed reference lines indicate common thresholds for extreme values.
+\item \strong{Global Goodness-of-Fit (\code{which = "gof"}):} Plots the cumulative
+hazard of the Cox-Snell residuals against the residuals themselves, with a
+dashed 45-degree reference line.
+}
 }
 \examples{
 library(survival)

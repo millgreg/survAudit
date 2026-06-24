@@ -1,10 +1,29 @@
 #' Plot survAudit Diagnostics
 #'
 #' Produces \code{ggplot2} diagnostic panels for a Cox PH model audit.
-#' Four plot types are available: proportional hazards (Schoenfeld
-#' residuals), functional form (martingale residuals), influence
-#' diagnostics (DFBETAs and likelihood displacement), and outlier
-#' assessment (multiple residual types).
+#' Five plot types are available: proportional hazards, functional form,
+#' influence diagnostics, outlier assessment, and global goodness-of-fit.
+#'
+#' @details
+#' \strong{Description of Plots:}
+#' \itemize{
+#'   \item \strong{Proportional Hazards (\code{which = "ph"}):} Plots scaled
+#'   Schoenfeld residuals against transformed time. A LOESS smooth is overlaid,
+#'   and a dashed reference line is positioned at the overall model coefficient
+#'   (\eqn{\hat{\beta}}).
+#'   \item \strong{Functional Form (\code{which = "functional"}):} Plots martingale
+#'   residuals from a null Cox model against each continuous covariate. A LOESS
+#'   smooth and a linear reference line are overlaid.
+#'   \item \strong{Influence Diagnostics (\code{which = "influence"}):} Plots
+#'   standardized DFBETAs for each observation across all covariates. Dotted
+#'   horizontal lines indicate the threshold for high influence (\eqn{\pm 2/\sqrt{n}}).
+#'   \item \strong{Outlier Assessment (\code{which = "outliers"}):} Plots martingale,
+#'   deviance, log-odds, and normal deviate residuals against the linear predictor.
+#'   Dashed reference lines indicate common thresholds for extreme values.
+#'   \item \strong{Global Goodness-of-Fit (\code{which = "gof"}):} Plots the cumulative
+#'   hazard of the Cox-Snell residuals against the residuals themselves, with a
+#'   dashed 45-degree reference line.
+#' }
 #'
 #' @param x An object of class \code{survAudit}.
 #' @param which Character vector specifying which plots to produce.
@@ -179,6 +198,14 @@ plot.survAudit <- function(x,
     }))
   }
 
+  # Calculate reference horizontal lines (beta hat = colMeans of scaled schoenfeld)
+  beta_hat <- colMeans(y_mat, na.rm = TRUE)
+  df_ref <- data.frame(
+    variable = var_names,
+    beta = beta_hat,
+    stringsAsFactors = FALSE
+  )
+
   tname <- switch(ph$transform,
                   "km" = "Kaplan-Meier",
                   "log" = "Log",
@@ -191,7 +218,7 @@ plot.survAudit <- function(x,
     geom_smooth(method = "loess", formula = y ~ x,
                 se = TRUE, colour = col_smooth, linewidth = 0.8,
                 fill = col_smooth, alpha = 0.15) +
-    geom_hline(yintercept = 0, linetype = "dashed", colour = col_ref,
+    geom_hline(data = df_ref, aes(yintercept = .data$beta), linetype = "dashed", colour = col_ref,
                linewidth = 0.5) +
     facet_wrap(~ variable, scales = "free_y") +
     labs(

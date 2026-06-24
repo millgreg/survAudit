@@ -87,16 +87,7 @@ print.survAudit <- function(x, ...) {
   cat("  Functional Form (visual assessment)\n")
   if (!is.null(x$functional_form) &&
       length(x$functional_form$results) > 0L) {
-    for (vname in names(x$functional_form$results)) {
-      res <- x$functional_form$results[[vname]]
-      if (isTRUE(res$departure_detected)) {
-        cat("    ", vname, ": possible departure from linearity\n",
-            sep = "")
-      } else {
-        cat("    ", vname, ": no apparent departure from linearity\n",
-            sep = "")
-      }
-    }
+    cat("    ", paste(x$functional_form$continuous_vars, collapse = ", "), "\n", sep = "")
   } else {
     cat("    not available\n")
   }

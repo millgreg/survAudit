@@ -32,7 +32,9 @@ Checking these assumptions usually requires running fragmented tests from multip
 
 ## Case Study Workflow
 
-In this vignette, we demonstrate how `survAudit` changes the analytical workflow of a typical survival analysis by revealing model limitations that are not apparent from standard Cox regression output. We use the classic `pbc` dataset from the `survival` package, which records survival data for patients with primary biliary cholangitis.
+In this vignette, we demonstrate how `survAudit` changes the analytical workflow of a typical survival analysis by revealing model limitations that are not apparent from standard Cox regression output. We use the classic `pbc` dataset from the `survival` package, which records survival data for patients with primary biliary cholangitis. Our goal is to highlight how standard Cox modeling practices can easily overlook critical assumption violations, and how the structured `survAudit` framework detects them and explicitly separates data-driven findings from those requiring scientific justification.
+
+Importantly, `survAudit` does not just produce visual plots; it returns a rich S3 object. Analysts can directly extract the underlying data (e.g., `audit$outliers$martingale`, `audit$ph$zph`) for custom downstream analyses and to preserve a transparent diagnostic record.
 
 ### 1. Fit the Initial Model
 
@@ -46,35 +48,57 @@ library(survAudit)
 data(pbc, package = "survival")
 pbc$status <- ifelse(pbc$status == 2, 1, 0)
 
-# Fit a naive Cox PH model
+# Fit a standard Cox PH model
 fit <- coxph(
   Surv(time, status) ~ age + bili + albumin + protime + factor(edema),
   data = pbc
 )
+summary(fit)
 ```
 
-In many applied analyses, reporting may proceed at this stage, with interpretation focused primarily on coefficient estimates and significance tests.
+In many applied analyses, reporting may proceed at this stage. The standard summary output clearly indicates that age, bilirubin, albumin, and prothrombin time are all highly significant predictors of mortality (p < 0.001), along with severe edema. With interpretation focused primarily on coefficient estimates and significance tests, this model would likely be published as-is.
 
-### 2. Run the Initial Audit
+### 2. The survAudit Intervention
 
-However, `survAudit` goes beyond asking whether a model is significant. It systematically answers: *What aspects of this model require attention, and what can be learned from the available data versus what requires scientific justification?* 
-
-We run the diagnostic audit using `survAudit()`. Supplying `data = pbc` is highly recommended to ensure complete case extraction for functional form plots.
+Running `survAudit()` immediately uncovers multiple violated assumptions that challenge the standard model's validity. The function aggregates goodness-of-fit, collinearity, proportional hazards, functional form, influence, and outliers into a single object.
 
 ```{r audit}
-audit <- survAudit(fit, data = pbc)
-summary(audit)
+audit1 <- survAudit(fit, data = pbc)
+summary(audit1)
 ```
 
-Running `survAudit()` immediately identifies several diagnostic findings that indicate areas where the model may require refinement. For example, the functional form diagnostic detects severe departures from linearity for both bilirubin and prothrombin time, while the proportional hazards test flags a global violation.
+#### The Ontology-Driven Summary
+The summary output provides an immediate, unified view of the model's health by structuring the entire report around the **assessability ontology**. Rather than hiding the assumptions in a footnote, `survAudit` elevates them to the primary headers: Non-Identifiable, Partially Assessable, and Statistically Assessable.
 
-We can visually explore the functional form violations:
+For example, the summary explicitly warns that independent censoring and unmeasured confounding cannot be tested statistically and require qualitative justification based on the study design. For assumptions that are statistically or partially assessable, the summary provides the raw diagnostics (like the `cox.zph` table or GVIF) alongside immediate next steps.
+
+#### Visual Diagnostics
+Statistical tests can be overly sensitive to sample size, insensitive to localized lack of fit, or entirely absent for certain structural assumptions (such as functional form). Because of this, `survAudit`'s summary explicitly prompts the analyst to generate targeted visual diagnostics for both flagged violations and inherently visual checks.
+
+**Overall Calibration**
+First, we check the overall Goodness-of-Fit using the Cox-Snell residuals.
+
+```{r plot-gof-initial}
+plot(audit1, which = "gof")
+```
+
+The cumulative hazard of the Cox-Snell residuals generally follows the 45-degree reference line, suggesting the overall macro-level calibration of the model is acceptable, even if specific covariate assumptions are violated.
+
+**Functional Form (Linearity)**
+The summary explicitly reminds us that functional form assessment is inherently visual. If we plot the functional form using martingale residuals:
 
 ```{r plot-functional}
-plot(audit, which = "functional")
+plot(audit1, which = "functional")
 ```
 
-Furthermore, the audit flags multiple highly influential observations and outliers. This explicitly prompts the analyst to check the raw data. Rather than automatically excluding these observations, `survAudit` preserves them as diagnostic findings requiring contextual evaluation.
+For `bili`, the plot clearly shows a logarithmic curve. For `protime`, the risk appears constant initially before sharply increasing. The apparent decrease at extreme values is likely an artifact of data sparsity in the right tail, highlighting why visual inspection by a domain expert is necessary.
+
+**Proportional Hazards**
+```{r plot-ph}
+plot(audit1, which = "ph")
+```
+
+The Schoenfeld residual plots for both `protime` and `bili` show strong deviations from a horizontal line, making it impossible to draw a flat line within their confidence bands. This visually confirms the statistical violations flagged in the summary.
 
 ### 3. Model Respecification: An Iterative Process
 

@@ -188,7 +188,7 @@
     paste0("no covariate-level violations detected at alpha = ", alpha, ".")
   }
 
-  paste0(global_str, "; ", covar_str)
+  paste0(global_str, "; ", covar_str, " Use plot(audit, which = 'ph') to visually assess time-varying effects.")
 }
 
 #' Summarize functional form evidence
@@ -222,7 +222,7 @@
   paste0(
     "Max |dfbetas| = ", formatC(max_dfb$value, format = "f", digits = 4),
     " (obs ", max_dfb$obs, ", variable '", max_dfb$variable, "'); ",
-    n_flagged, " observation(s) exceed dfbetas threshold."
+    n_flagged, " observation(s) exceed dfbetas threshold. Use plot(audit, which = 'influence') to identify specific highly influential cases."
   )
 }
 
@@ -252,7 +252,7 @@
 
   paste0(
     "Flagged observations: ", n_dev, " by deviance residuals, ",
-    n_lo, " by log-odds, ", n_nd, " by normal deviate."
+    n_lo, " by log-odds, ", n_nd, " by normal deviate. Use plot(audit, which = 'outliers') to inspect residual distributions."
   )
 }
 
