@@ -283,22 +283,6 @@ functional form, influence, and outliers into a single object.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   No collinearity issues detected.</span></span></code></pre></div>
 <div class="section level4">
-<h4 id="the-ontology-driven-summary">The Ontology-Driven Summary<a class="anchor" aria-label="anchor" href="#the-ontology-driven-summary"></a>
-</h4>
-<p>The summary output provides an immediate, unified view of the model’s
-health by structuring the entire report around the <strong>assessability
-ontology</strong>. Rather than hiding the assumptions in a footnote,
-<code>survAudit</code> elevates them to the primary headers:
-Non-Identifiable, Partially Assessable, and Statistically
-Assessable.</p>
-<p>For example, the summary explicitly warns that independent censoring
-and unmeasured confounding cannot be tested statistically and require
-qualitative justification based on the study design. For assumptions
-that are statistically or partially assessable, the summary provides the
-raw diagnostics (like the <code>cox.zph</code> table or GVIF) alongside
-immediate next steps.</p>
-</div>
-<div class="section level4">
 <h4 id="visual-diagnostics">Visual Diagnostics<a class="anchor" aria-label="anchor" href="#visual-diagnostics"></a>
 </h4>
 <p>Statistical tests can be overly sensitive to sample size, insensitive
@@ -332,18 +316,31 @@ inspection by a domain expert is necessary.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit1</span>, which <span class="op">=</span> <span class="st">"ph"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="survAudit-introduction_files/figure-html/plot-ph-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
 <p>The Schoenfeld residual plots for both <code>protime</code> and
-<code>bili</code> show strong deviations from a horizontal line, making
-it impossible to draw a flat line within their confidence bands. This
+<code>bili</code> show strong deviations from a horizontal line. This
 visually confirms the statistical violations flagged in the summary.</p>
+<p><strong>Summary of Initial Audit</strong> Without having seen all the
+plots already, the initial <code>survAudit</code> explicitly revealed
+that the standard Cox model suffers from multiple structural issues:</p>
+<ol style="list-style-type: decimal">
+<li>Non-linearity for both <code>bili</code> and
+<code>protime</code>.</li>
+<li>Proportional hazards violations for <code>bili</code> and
+<code>protime</code>.</li>
+<li>The presence of several highly influential observations and outliers
+across the dataset.</li>
+</ol>
+<p>Rather than proceeding with the initial model, the analyst is now
+equipped with the exact information needed to iteratively correct the
+model. As a first step, we will apply log-transformations to
+<code>bili</code> and <code>protime</code> to address the functional
+form violations, before we re-audit the model.</p>
 </div>
 </div>
 <div class="section level3">
-<h3 id="model-respecification-an-iterative-process">3. Model Respecification: An Iterative Process<a class="anchor" aria-label="anchor" href="#model-respecification-an-iterative-process"></a>
+<h3 id="iterative-model-correction">3. Iterative Model Correction<a class="anchor" aria-label="anchor" href="#iterative-model-correction"></a>
 </h3>
-<p>Crucially, the audit provides a transparent roadmap for model
-respecification. First, we applied clinically plausible logarithmic
-transformations to bilirubin and prothrombin time to address the
-detected departures from linearity.</p>
+<p>Guided by the audit, we fit a corrected model using the
+log-transformed variables:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Fit an updated model with log transformations</span></span>
 <span><span class="va">fit2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph</a></span><span class="op">(</span></span>
@@ -442,18 +439,76 @@ detected departures from linearity.</p>
 <span><span class="co">#&gt;    factor(edema)                1.228      2              1.053 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   No collinearity issues detected.</span></span></code></pre></div>
-<p>A subsequent re-audit of the updated model reveals the impact of
-these changes. Importantly, the re-audit demonstrates that model
-correction is iterative rather than binary: while the functional form
-violations were substantially reduced, the remaining proportional
-hazards violation for <code>log(protime)</code> indicates that
-additional modeling decisions—such as introducing a time-dependent
-effect or stratification—may still be required.</p>
-<p>We can also verify the global goodness-of-fit of the updated model
-using Cox-Snell residuals:</p>
+<p>The initial audit suggested a log-linear relationship for bilirubin,
+but we must re-check all diagnostic plots to confirm the
+transformation’s effect across all assumptions.</p>
+<p><strong>Overall Calibration Re-Assessment</strong></p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit2</span>, which <span class="op">=</span> <span class="st">"gof"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="survAudit-introduction_files/figure-html/plot-gof-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
+<p><img src="survAudit-introduction_files/figure-html/audit-corrected-gof-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;">
+The overall goodness-of-fit using Cox-Snell residuals continues to
+follow the 45-degree reference line except for very few outliers,
+confirming that the macro-level calibration of the model remains
+acceptable after the variable transformations.</p>
+<p><strong>Functional Form Re-Assessment</strong></p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit2</span>, which <span class="op">=</span> <span class="st">"functional"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="survAudit-introduction_files/figure-html/audit-corrected-functional-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;">
+The functional form plots for the updated model show that the
+log-transformations were not a complete fix. While the curve for
+<code>log(bili)</code> shows some improvement, the functional form for
+<code>log(protime)</code> remains problematic. (Note: Ensure you cycle
+through or extract all generated plot panels to view every continuous
+covariate).</p>
+<p><strong>Proportional Hazards Re-Assessment</strong></p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit2</span>, which <span class="op">=</span> <span class="st">"ph"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="survAudit-introduction_files/figure-html/audit-corrected-ph-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;">
+Re-assessing proportional hazards reveals further complications. The
+proportional hazards assumption is still not satisfied for
+<code>log(bili)</code>. Interestingly, the Schoenfeld residual slope for
+<code>log(protime)</code> looks a tiny bit better, but the assumption is
+still violated.</p>
+<p><strong>Influence Re-Assessment</strong></p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit2</span>, which <span class="op">=</span> <span class="st">"influence"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="survAudit-introduction_files/figure-html/influence-plot-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;">
+When evaluating influence, analysts should visually inspect the DFBETAs
+plots for points that stray far from the main cluster and cross the
+dotted threshold lines. The audit explicitly reports that multiple
+observations still exceed the conservative DFBETAs threshold.</p>
+<p><strong>Outliers Re-Assessment</strong></p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit2</span>, which <span class="op">=</span> <span class="st">"outliers"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="survAudit-introduction_files/figure-html/outliers-plot-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;">
+For outliers, the audit generates a four-panel plot displaying Deviance,
+Log-Odds, Martingale, and Normal Deviate residuals against the linear
+predictor. Analysts should check these residual plots for points that
+systematically exceed their respective threshold bands (e.g.,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>±</mi><mn>1.96</mn></mrow><annotation encoding="application/x-tex">\pm 1.96</annotation></semantics></math>
+for deviance and normal deviate, or
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>±</mi><mn>3.66</mn></mrow><annotation encoding="application/x-tex">\pm 3.66</annotation></semantics></math>
+for log-odds). Several observations continue to exhibit extreme deviance
+residuals.</p>
+<p>These findings emphasize that influence and outliers are global
+properties of the data. It is highly recommended that these extreme
+outliers and influential points are checked manually by the analyst to
+ensure they are not the result of data entry errors, and to evaluate
+their impact on the final estimates for example by using sensitivity
+analyses.</p>
+<p><strong>Ongoing Model Refinement</strong> The initial analysis masked
+severe misspecifications, but <code>survAudit</code> surfaced critical
+violations. Our re-audit demonstrated that survival modeling is highly
+iterative—simple log-transformations are rarely a silver bullet. While
+some assumptions improved, proportional hazards violations and
+influential outliers persisted.</p>
+<p>By formalizing these checks, <code>survAudit</code> prevents the
+premature publication of mis-specified models and guarantees
+transparency. We are not finished here: the logical next steps involve
+manually investigating the highly influential observations and exploring
+alternative strategies for both the <code>bili</code> and
+<code>protime</code> variables (e.g., stratification or time-dependent
+effects) to achieve a robust final model.</p>
 </div>
 <div class="section level3">
 <h3 id="the-auditable-s3-object">4. The Auditable S3 Object<a class="anchor" aria-label="anchor" href="#the-auditable-s3-object"></a>
@@ -464,7 +519,7 @@ inspect individual diagnostic components, reuse computed quantities, and
 integrate audit results into custom reporting workflows.</p>
 <p>For example, you can extract the underlying Proportional Hazards test
 table:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">audit2</span><span class="op">$</span><span class="va">ph</span><span class="op">$</span><span class="va">table</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                      chisq df           p</span></span>
 <span><span class="co">#&gt; age            0.001048017  1 0.974174526</span></span>
@@ -477,7 +532,7 @@ table:</p>
 statistically. <code>survAudit</code> requires you to document your
 qualitative justification. You can append these directly to the
 object:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">audit2</span><span class="op">$</span><span class="va">assumptions</span><span class="op">$</span><span class="va">non_identifiable</span><span class="op">$</span><span class="va">independent_censoring</span><span class="op">$</span><span class="va">justification</span> <span class="op">&lt;-</span> </span>
 <span>  <span class="st">"Censoring was purely administrative (end of study), satisfying independent censoring."</span></span></code></pre></div>
 <p>If we print the audit again, this justification is now permanently
