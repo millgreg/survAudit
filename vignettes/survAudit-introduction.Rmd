@@ -67,11 +67,6 @@ audit1 <- survAudit(fit, data = pbc)
 summary(audit1)
 ```
 
-#### The Ontology-Driven Summary
-The summary output provides an immediate, unified view of the model's health by structuring the entire report around the **assessability ontology**. Rather than hiding the assumptions in a footnote, `survAudit` elevates them to the primary headers: Non-Identifiable, Partially Assessable, and Statistically Assessable.
-
-For example, the summary explicitly warns that independent censoring and unmeasured confounding cannot be tested statistically and require qualitative justification based on the study design. For assumptions that are statistically or partially assessable, the summary provides the raw diagnostics (like the `cox.zph` table or GVIF) alongside immediate next steps.
-
 #### Visual Diagnostics
 Statistical tests can be overly sensitive to sample size, insensitive to localized lack of fit, or entirely absent for certain structural assumptions (such as functional form). Because of this, `survAudit`'s summary explicitly prompts the analyst to generate targeted visual diagnostics for both flagged violations and inherently visual checks.
 
@@ -98,11 +93,20 @@ For `bili`, the plot clearly shows a logarithmic curve. For `protime`, the risk 
 plot(audit1, which = "ph")
 ```
 
-The Schoenfeld residual plots for both `protime` and `bili` show strong deviations from a horizontal line, making it impossible to draw a flat line within their confidence bands. This visually confirms the statistical violations flagged in the summary.
+The Schoenfeld residual plots for both `protime` and `bili` show strong deviations from a horizontal line. This visually confirms the statistical violations flagged in the summary.
 
-### 3. Model Respecification: An Iterative Process
+**Summary of Initial Audit**
+Without having seen all the plots already, the initial `survAudit` explicitly revealed that the standard Cox model suffers from multiple structural issues: 
 
-Crucially, the audit provides a transparent roadmap for model respecification. First, we applied clinically plausible logarithmic transformations to bilirubin and prothrombin time to address the detected departures from linearity.
+1. Non-linearity for both `bili` and `protime`.
+2. Proportional hazards violations for `bili` and `protime`.
+3. The presence of several highly influential observations and outliers across the dataset.
+
+Rather than proceeding with the initial model, the analyst is now equipped with the exact information needed to iteratively correct the model. As a first step, we will apply log-transformations to `bili` and `protime` to address the functional form violations, before we re-audit the model. 
+
+### 3. Iterative Model Correction
+
+Guided by the audit, we fit a corrected model using the log-transformed variables:
 
 ```{r respecify}
 # Fit an updated model with log transformations
@@ -116,13 +120,44 @@ audit2 <- survAudit(fit2, data = pbc)
 summary(audit2)
 ```
 
-A subsequent re-audit of the updated model reveals the impact of these changes. Importantly, the re-audit demonstrates that model correction is iterative rather than binary: while the functional form violations were substantially reduced, the remaining proportional hazards violation for `log(protime)` indicates that additional modeling decisions—such as introducing a time-dependent effect or stratification—may still be required.
+The initial audit suggested a log-linear relationship for bilirubin, but we must re-check all diagnostic plots to confirm the transformation's effect across all assumptions.
 
-We can also verify the global goodness-of-fit of the updated model using Cox-Snell residuals:
-
-```{r plot-gof}
+**Overall Calibration Re-Assessment**
+```{r audit-corrected-gof}
 plot(audit2, which = "gof")
 ```
+The overall goodness-of-fit using Cox-Snell residuals continues to follow the 45-degree reference line except for very few outliers, confirming that the macro-level calibration of the model remains acceptable after the variable transformations.
+
+**Functional Form Re-Assessment**
+```{r audit-corrected-functional}
+plot(audit2, which = "functional")
+```
+The functional form plots for the updated model show that the log-transformations were not a complete fix. While the curve for `log(bili)` shows some improvement, the functional form for `log(protime)` remains problematic. (Note: Ensure you cycle through or extract all generated plot panels to view every continuous covariate).
+
+**Proportional Hazards Re-Assessment**
+```{r audit-corrected-ph}
+plot(audit2, which = "ph")
+```
+Re-assessing proportional hazards reveals further complications. The proportional hazards assumption is still not satisfied for `log(bili)`. Interestingly, the Schoenfeld residual slope for `log(protime)` looks a tiny bit better, but the assumption is still violated. 
+
+**Influence Re-Assessment**
+```{r influence-plot}
+plot(audit2, which = "influence")
+```
+When evaluating influence, analysts should visually inspect the DFBETAs plots for points that stray far from the main cluster and cross the dotted threshold lines. The audit explicitly reports that multiple observations still exceed the conservative DFBETAs threshold. 
+
+**Outliers Re-Assessment**
+```{r outliers-plot}
+plot(audit2, which = "outliers")
+```
+For outliers, the audit generates a four-panel plot displaying Deviance, Log-Odds, Martingale, and Normal Deviate residuals against the linear predictor. Analysts should check these residual plots for points that systematically exceed their respective threshold bands (e.g., $\pm 1.96$ for deviance and normal deviate, or $\pm 3.66$ for log-odds). Several observations continue to exhibit extreme deviance residuals. 
+
+These findings emphasize that influence and outliers are global properties of the data. It is highly recommended that these extreme outliers and influential points are checked manually by the analyst to ensure they are not the result of data entry errors, and to evaluate their impact on the final estimates for example by using sensitivity analyses.
+
+**Ongoing Model Refinement**
+The initial analysis masked severe misspecifications, but `survAudit` surfaced critical violations. Our re-audit demonstrated that survival modeling is highly iterative—simple log-transformations are rarely a silver bullet. While some assumptions improved, proportional hazards violations and influential outliers persisted.
+
+By formalizing these checks, `survAudit` prevents the premature publication of mis-specified models and guarantees transparency. We are not finished here: the logical next steps involve manually investigating the highly influential observations and exploring alternative strategies for both the `bili` and `protime` variables (e.g., stratification or time-dependent effects) to achieve a robust final model.
 
 ### 4. The Auditable S3 Object
 
