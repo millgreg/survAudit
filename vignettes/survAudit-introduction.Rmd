@@ -169,7 +169,7 @@ For example, you can extract the underlying Proportional Hazards test table:
 print(audit2$ph$table)
 ```
 
-Some assumptions (like Independent Censoring) cannot be tested statistically. `survAudit` requires you to document your qualitative justification. You can append these directly to the object:
+Some assumptions (like Independent Censoring) cannot be tested statistically. `survAudit` allows you to document your qualitative justification. You can append these directly to the object:
 
 ```{r justify}
 audit2$assumptions$non_identifiable$independent_censoring$justification <- 

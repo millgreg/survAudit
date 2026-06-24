@@ -17,9 +17,13 @@
 #'   \item \strong{Influence Diagnostics (\code{which = "influence"}):} Plots
 #'   standardized DFBETAs for each observation across all covariates. Dotted
 #'   horizontal lines indicate the threshold for high influence (\eqn{\pm 2/\sqrt{n}}).
+#'   Analysts should look for observations that stray far from the main cluster and
+#'   cross these thresholds.
 #'   \item \strong{Outlier Assessment (\code{which = "outliers"}):} Plots martingale,
 #'   deviance, log-odds, and normal deviate residuals against the linear predictor.
-#'   Dashed reference lines indicate common thresholds for extreme values.
+#'   Dashed reference lines indicate common thresholds for extreme values
+#'   (e.g., \eqn{\pm 1.96} for deviance and normal deviate, \eqn{\pm 3.66} for log-odds).
+#'   Analysts should visually check for points that systematically exceed these bands.
 #'   \item \strong{Global Goodness-of-Fit (\code{which = "gof"}):} Plots the cumulative
 #'   hazard of the Cox-Snell residuals against the residuals themselves, with a
 #'   dashed 45-degree reference line.
