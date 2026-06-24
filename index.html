@@ -102,7 +102,7 @@
 <li>
 <strong>Functional Form (Linearity)</strong>: Martingale residuals from multivariate reduced models are compared against continuous predictors using LOESS smooths with 95% confidence bands to identify departures from linearity visually.</li>
 <li>
-<strong>Visual Diagnostics</strong>: Overall goodness-of-fit via Cox-Snell residuals, Outlier panels (Deviance, Log-Odds), and Influence diagnostics (DFBETAs and Likelihood Displacement).</li>
+<strong>Visual Diagnostics</strong>: Overall goodness-of-fit via Cox-Snell residuals, Outlier panels (Deviance, Log-Odds), and Influence diagnostics (DFBETAs).</li>
 </ul>
 </li>
 <li>
@@ -152,7 +152,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit</span>, which <span class="op">=</span> <span class="st">"gof"</span><span class="op">)</span>         <span class="co"># Cox-Snell Overall Calibration</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit</span>, which <span class="op">=</span> <span class="st">"ph"</span><span class="op">)</span>          <span class="co"># Proportional Hazards (Schoenfeld)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit</span>, which <span class="op">=</span> <span class="st">"functional"</span><span class="op">)</span>  <span class="co"># Linearity (Martingale)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit</span>, which <span class="op">=</span> <span class="st">"influence"</span><span class="op">)</span>   <span class="co"># DFBETAs &amp; Likelihood Displacement</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit</span>, which <span class="op">=</span> <span class="st">"influence"</span><span class="op">)</span>   <span class="co"># DFBETAs</span></span></code></pre></div>
 <p>For a comprehensive walkthrough of interpreting these outputs, please read the <a href="https://millgreg.github.io/survAudit/articles/survAudit-introduction.html" class="external-link">Introduction Vignette / Case Study</a>.</p>
 <div class="section level3">
 <h3 id="documenting-qualitative-justifications">Documenting Qualitative Justifications<a class="anchor" aria-label="anchor" href="#documenting-qualitative-justifications"></a>
