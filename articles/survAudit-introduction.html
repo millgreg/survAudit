@@ -117,7 +117,16 @@ the analytical workflow of a typical survival analysis by revealing
 model limitations that are not apparent from standard Cox regression
 output. We use the classic <code>pbc</code> dataset from the
 <code>survival</code> package, which records survival data for patients
-with primary biliary cholangitis.</p>
+with primary biliary cholangitis. Our goal is to highlight how standard
+Cox modeling practices can easily overlook critical assumption
+violations, and how the structured <code>survAudit</code> framework
+detects them and explicitly separates data-driven findings from those
+requiring scientific justification.</p>
+<p>Importantly, <code>survAudit</code> does not just produce visual
+plots; it returns a rich S3 object. Analysts can directly extract the
+underlying data (e.g., <code>audit$outliers$martingale</code>,
+<code>audit$ph$zph</code>) for custom downstream analyses and to
+preserve a transparent diagnostic record.</p>
 <div class="section level3">
 <h3 id="fit-the-initial-model">1. Fit the Initial Model<a class="anchor" aria-label="anchor" href="#fit-the-initial-model"></a>
 </h3>
@@ -133,59 +142,117 @@ categorical factor (<code>edema</code>):</p>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">pbc</span>, package <span class="op">=</span> <span class="st">"survival"</span><span class="op">)</span></span>
 <span><span class="va">pbc</span><span class="op">$</span><span class="va">status</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">pbc</span><span class="op">$</span><span class="va">status</span> <span class="op">==</span> <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Fit a naive Cox PH model</span></span>
+<span><span class="co"># Fit a standard Cox PH model</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">bili</span> <span class="op">+</span> <span class="va">albumin</span> <span class="op">+</span> <span class="va">protime</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">edema</span><span class="op">)</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">pbc</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>In many applied analyses, reporting may proceed at this stage, with
-interpretation focused primarily on coefficient estimates and
-significance tests.</p>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Call:</span></span>
+<span><span class="co">#&gt; coxph(formula = Surv(time, status) ~ age + bili + albumin + protime + </span></span>
+<span><span class="co">#&gt;     factor(edema), data = pbc)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   n= 416, number of events= 160 </span></span>
+<span><span class="co">#&gt;    (2 observations deleted due to missingness)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;                       coef exp(coef)  se(coef)      z Pr(&gt;|z|)    </span></span>
+<span><span class="co">#&gt; age               0.040138  1.040954  0.008152  4.924 8.49e-07 ***</span></span>
+<span><span class="co">#&gt; bili              0.117018  1.124140  0.013235  8.841  &lt; 2e-16 ***</span></span>
+<span><span class="co">#&gt; albumin          -0.964037  0.381350  0.205262 -4.697 2.65e-06 ***</span></span>
+<span><span class="co">#&gt; protime           0.197402  1.218234  0.056958  3.466 0.000529 ***</span></span>
+<span><span class="co">#&gt; factor(edema)0.5  0.206240  1.229049  0.229181  0.900 0.368172    </span></span>
+<span><span class="co">#&gt; factor(edema)1    1.124857  3.079777  0.295062  3.812 0.000138 ***</span></span>
+<span><span class="co">#&gt; ---</span></span>
+<span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;                  exp(coef) exp(-coef) lower .95 upper .95</span></span>
+<span><span class="co">#&gt; age                 1.0410     0.9607    1.0245    1.0577</span></span>
+<span><span class="co">#&gt; bili                1.1241     0.8896    1.0954    1.1537</span></span>
+<span><span class="co">#&gt; albumin             0.3814     2.6223    0.2550    0.5702</span></span>
+<span><span class="co">#&gt; protime             1.2182     0.8209    1.0896    1.3621</span></span>
+<span><span class="co">#&gt; factor(edema)0.5    1.2290     0.8136    0.7843    1.9260</span></span>
+<span><span class="co">#&gt; factor(edema)1      3.0798     0.3247    1.7273    5.4913</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Concordance= 0.813  (se = 0.018 )</span></span>
+<span><span class="co">#&gt; Likelihood ratio test= 184.9  on 6 df,   p=&lt;2e-16</span></span>
+<span><span class="co">#&gt; Wald test            = 219.1  on 6 df,   p=&lt;2e-16</span></span>
+<span><span class="co">#&gt; Score (logrank) test = 330.2  on 6 df,   p=&lt;2e-16</span></span></code></pre></div>
+<p>In many applied analyses, reporting may proceed at this stage. The
+standard summary output clearly indicates that age, bilirubin, albumin,
+and prothrombin time are all highly significant predictors of mortality
+(p &lt; 0.001), along with severe edema. With interpretation focused
+primarily on coefficient estimates and significance tests, this model
+would likely be published as-is.</p>
 </div>
 <div class="section level3">
-<h3 id="run-the-initial-audit">2. Run the Initial Audit<a class="anchor" aria-label="anchor" href="#run-the-initial-audit"></a>
+<h3 id="the-survaudit-intervention">2. The survAudit Intervention<a class="anchor" aria-label="anchor" href="#the-survaudit-intervention"></a>
 </h3>
-<p>However, <code>survAudit</code> goes beyond asking whether a model is
-significant. It systematically answers: <em>What aspects of this model
-require attention, and what can be learned from the available data
-versus what requires scientific justification?</em></p>
-<p>We run the diagnostic audit using <code><a href="../reference/survAudit.html">survAudit()</a></code>. Supplying
-<code>data = pbc</code> is highly recommended to ensure complete case
-extraction for functional form plots.</p>
+<p>Running <code><a href="../reference/survAudit.html">survAudit()</a></code> immediately uncovers multiple
+violated assumptions that challenge the standard model’s validity. The
+function aggregates goodness-of-fit, collinearity, proportional hazards,
+functional form, influence, and outliers into a single object.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">audit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/survAudit.html">survAudit</a></span><span class="op">(</span><span class="va">fit</span>, data <span class="op">=</span> <span class="va">pbc</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">audit</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ── survAudit: Detailed Diagnostic Report ──────────────────────── </span></span>
+<code class="sourceCode R"><span><span class="va">audit1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/survAudit.html">survAudit</a></span><span class="op">(</span><span class="va">fit</span>, data <span class="op">=</span> <span class="va">pbc</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">audit1</span><span class="op">)</span></span>
+<span><span class="co">#&gt; =================================================================</span></span>
+<span><span class="co">#&gt;              survAudit: Detailed Diagnostic Report               </span></span>
+<span><span class="co">#&gt; =================================================================</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Audit time:  2026-06-23 12:59:10 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Data Context ───────────────────────────────────────────────── </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Sample size:            416 </span></span>
-<span><span class="co">#&gt;   Events:                 160 </span></span>
-<span><span class="co">#&gt;   Censored:              256 (61.5%)</span></span>
-<span><span class="co">#&gt;   Time range:             [41.00, 4795.00] </span></span>
-<span><span class="co">#&gt;   Median time:            1730.00 </span></span>
-<span><span class="co">#&gt;   Time IQR:               [1094.25, 2617.25] </span></span>
-<span><span class="co">#&gt;   Tied event times:      10 (6.2%)</span></span>
-<span><span class="co">#&gt;   Missing data:</span></span>
-<span><span class="co">#&gt;     protime: 2 missing (0.5%)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Model Information ──────────────────────────────────────────── </span></span>
+<span><span class="co">#&gt; ── Data Context &amp; Model Info ──────────────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Formula:       Surv(time, status) ~ age + bili + albumin + protime + factor(edema) </span></span>
-<span><span class="co">#&gt;   Coefficients:  6 </span></span>
-<span><span class="co">#&gt;   Tie method:    efron </span></span>
-<span><span class="co">#&gt;   Converged:     yes </span></span>
+<span><span class="co">#&gt;   Sample size:  416  |  Events: 160  |  Censored: 256 (61.5%)</span></span>
+<span><span class="co">#&gt;   Missing data: protime: 2 missing (0.5%)  |  Tied events: 10 (6.2%)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Global Goodness-of-Fit ─────────────────────────────────────── </span></span>
+<span><span class="co">#&gt; ── 1. Non-Identifiable Assumptions ────────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   These cannot be tested statistically and require domain knowledge:</span></span>
+<span><span class="co">#&gt;     - Independent censoring</span></span>
+<span><span class="co">#&gt;     - Absence of unmeasured confounding</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── 2. Partially Assessable Assumptions ────────────────────────── </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   [ Global Goodness-of-Fit ]</span></span>
 <span><span class="co">#&gt;   Cox-Snell residuals computed.</span></span>
+<span><span class="co">#&gt;   (Use plot(audit, which = "gof") to visually assess macro-calibration.)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Proportional Hazards (cox.zph) ─────────────────────────────── </span></span>
+<span><span class="co">#&gt;   [ Functional Form Assessment ]</span></span>
+<span><span class="co">#&gt;   Continuous variables assessed:  age, bili, albumin, protime </span></span>
+<span><span class="co">#&gt;   (Use plot(audit, which = "functional") to visually inspect non-linearity.)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Transform:  Kaplan-Meier </span></span>
+<span><span class="co">#&gt;   [ Influence Diagnostics ]</span></span>
+<span><span class="co">#&gt;   Threshold (2/sqrt(n)):  0.0981 </span></span>
+<span><span class="co">#&gt;   Flagged observations (|dfbetas| &gt; threshold):  69 </span></span>
 <span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Top 5 most influential observations (by max |dfbetas|):</span></span>
+<span><span class="co">#&gt;    Obs       Max |dfbetas| </span></span>
+<span><span class="co">#&gt;    ──────────────────────── </span></span>
+<span><span class="co">#&gt;    325              0.9582 </span></span>
+<span><span class="co">#&gt;    293              0.5832 </span></span>
+<span><span class="co">#&gt;    107              0.5716 </span></span>
+<span><span class="co">#&gt;    63               0.5118 </span></span>
+<span><span class="co">#&gt;    253              0.4390 </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   (Use plot(audit, which = "influence") to visually inspect highly influential cases.)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   [ Outlier Assessment ]</span></span>
+<span><span class="co">#&gt;   Flagged deviance residuals (|resid| &gt; 1.96):        19 </span></span>
+<span><span class="co">#&gt;   Flagged log-odds residuals (|resid| &gt; 3.66):        9 </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Top 5 largest deviance residuals:</span></span>
+<span><span class="co">#&gt;    Obs      Deviance Resid </span></span>
+<span><span class="co">#&gt;    ──────────────────────── </span></span>
+<span><span class="co">#&gt;    319              3.2353 </span></span>
+<span><span class="co">#&gt;    87               3.0989 </span></span>
+<span><span class="co">#&gt;    331              2.7288 </span></span>
+<span><span class="co">#&gt;    103              2.5281 </span></span>
+<span><span class="co">#&gt;    350              2.4782 </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   (Use plot(audit, which = "outliers") to visually inspect distributions.)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── 3. Statistically Assessable Assumptions ────────────────────── </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   [ Proportional Hazards ]</span></span>
 <span><span class="co">#&gt;    Variable                     chisq     df          p </span></span>
 <span><span class="co">#&gt;    ──────────────────────────────────────────────────── </span></span>
 <span><span class="co">#&gt;    protime                      9.030      1      0.003 </span></span>
@@ -195,56 +262,15 @@ extraction for functional form plots.</p>
 <span><span class="co">#&gt;    age                          0.067      1      0.796 </span></span>
 <span><span class="co">#&gt;    GLOBAL                      22.248      6      0.001 </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Functional Form Assessment ─────────────────────────────────── </span></span>
+<span><span class="co">#&gt;   Global test: significant (p = 0.001)</span></span>
+<span><span class="co">#&gt;   Flagged covariates (p &lt; 0.05): protime, bili</span></span>
+<span><span class="co">#&gt;   (Use plot(audit, which = "ph") to visually assess time-varying effects.)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Continuous variables assessed:  age, bili, albumin, protime </span></span>
+<span><span class="co">#&gt;   [ Event Sufficiency (EPV) ]</span></span>
+<span><span class="co">#&gt;   Events Per Variable (EPV):  26.7 </span></span>
+<span><span class="co">#&gt;   Assessment:                 adequate  (target: &gt;= 20)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   age: no departure detected</span></span>
-<span><span class="co">#&gt;   bili: no departure detected</span></span>
-<span><span class="co">#&gt;   albumin: no departure detected</span></span>
-<span><span class="co">#&gt;   protime: no departure detected</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Influence Diagnostics ──────────────────────────────────────── </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Threshold (2/sqrt(n)):  0.0981 </span></span>
-<span><span class="co">#&gt;   Max |dfbetas|:         0.9582 (obs #325, protime)</span></span>
-<span><span class="co">#&gt;   Flagged observations:   69 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Top 5 most influential observations (by max |dfbetas|):</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;    Obs       Max |dfbetas| </span></span>
-<span><span class="co">#&gt;    ──────────────────────── </span></span>
-<span><span class="co">#&gt;    325              0.9582 </span></span>
-<span><span class="co">#&gt;    293              0.5832 </span></span>
-<span><span class="co">#&gt;    107              0.5716 </span></span>
-<span><span class="co">#&gt;    63               0.5118 </span></span>
-<span><span class="co">#&gt;    253              0.4390 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Outlier Assessment ─────────────────────────────────────────── </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Flagged deviance residuals (|resid| &gt; 1.96):        19 </span></span>
-<span><span class="co">#&gt;   Flagged log-odds residuals (|resid| &gt; 3.66):        9 </span></span>
-<span><span class="co">#&gt;   Flagged normal deviate residuals (|resid| &gt; 1.96):  9 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Top 5 largest deviance residuals:</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;    Obs      Deviance Resid </span></span>
-<span><span class="co">#&gt;    ──────────────────────── </span></span>
-<span><span class="co">#&gt;    319              3.2353 </span></span>
-<span><span class="co">#&gt;    87               3.0989 </span></span>
-<span><span class="co">#&gt;    331              2.7288 </span></span>
-<span><span class="co">#&gt;    103              2.5281 </span></span>
-<span><span class="co">#&gt;    350              2.4782 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Event Sufficiency (Events Per Variable - EPV) ──────────────── </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Events:                        160 </span></span>
-<span><span class="co">#&gt;   Estimated parameters (coefs):  6 </span></span>
-<span><span class="co">#&gt;   Events Per Variable (EPV):     26.7 </span></span>
-<span><span class="co">#&gt;   Assessment:                    adequate  (target: &gt;= 20)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Collinearity Diagnostics (VIF) ─────────────────────────────── </span></span>
-<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   [ Collinearity Diagnostics (VIF) ]</span></span>
 <span><span class="co">#&gt;   Threshold: VIF &gt; 5 (or scaled GVIF^(1/(2*Df)) &gt; 2.236 for multi-Df terms)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    Term                          GVIF     Df    GVIF^(1/(2*Df)) </span></span>
@@ -255,38 +281,61 @@ extraction for functional form plots.</p>
 <span><span class="co">#&gt;    protime                      1.045      1              1.022 </span></span>
 <span><span class="co">#&gt;    factor(edema)                1.273      2              1.062 </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   No collinearity issues detected (all thresholds satisfied).</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Assumption Classification ──────────────────────────────────── </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Non-Identifiable:</span></span>
-<span><span class="co">#&gt;     - Independent censoring</span></span>
-<span><span class="co">#&gt;     - Absence of unmeasured confounding</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Partially Assessable:</span></span>
-<span><span class="co">#&gt;     - functional_form: Assessment of 4 continuous covariate(s) is inherently visual. Use plot(audit, which = 'functional') to inspect martingale residual LOESS smooths for non-linearity.</span></span>
-<span><span class="co">#&gt;     - outlier_impact: Flagged observations: 19 by deviance residuals, 9 by log-odds, 9 by normal deviate.</span></span>
-<span><span class="co">#&gt;     - missing_data: 1 of 5 covariate(s) have missing values (2 total missing entries).</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Statistically Assessable:</span></span>
-<span><span class="co">#&gt;     - proportional_hazards: Global cox.zph test significant (p = 0.001); 2 of 5 covariate(s) flagged at alpha = 0.05.</span></span>
-<span><span class="co">#&gt;     - influence_stability: Max |dfbetas| = 0.9582 (obs 325, variable 'protime'); 69 observation(s) exceed dfbetas threshold.</span></span>
-<span><span class="co">#&gt;     - Collinearity: No collinearity detected; max VIF/scaled GVIF = 1.15.</span></span>
-<span><span class="co">#&gt;     - event_sufficiency: Events-per-variable ratio = 26.7 (160 events / 6 parameters); classified as 'adequate'.</span></span></code></pre></div>
-<p>Running <code><a href="../reference/survAudit.html">survAudit()</a></code> immediately identifies several
-diagnostic findings that indicate areas where the model may require
-refinement. For example, the functional form diagnostic detects severe
-departures from linearity for both bilirubin and prothrombin time, while
-the proportional hazards test flags a global violation.</p>
-<p>We can visually explore the functional form violations:</p>
+<span><span class="co">#&gt;   No collinearity issues detected.</span></span></code></pre></div>
+<div class="section level4">
+<h4 id="the-ontology-driven-summary">The Ontology-Driven Summary<a class="anchor" aria-label="anchor" href="#the-ontology-driven-summary"></a>
+</h4>
+<p>The summary output provides an immediate, unified view of the model’s
+health by structuring the entire report around the <strong>assessability
+ontology</strong>. Rather than hiding the assumptions in a footnote,
+<code>survAudit</code> elevates them to the primary headers:
+Non-Identifiable, Partially Assessable, and Statistically
+Assessable.</p>
+<p>For example, the summary explicitly warns that independent censoring
+and unmeasured confounding cannot be tested statistically and require
+qualitative justification based on the study design. For assumptions
+that are statistically or partially assessable, the summary provides the
+raw diagnostics (like the <code>cox.zph</code> table or GVIF) alongside
+immediate next steps.</p>
+</div>
+<div class="section level4">
+<h4 id="visual-diagnostics">Visual Diagnostics<a class="anchor" aria-label="anchor" href="#visual-diagnostics"></a>
+</h4>
+<p>Statistical tests can be overly sensitive to sample size, insensitive
+to localized lack of fit, or entirely absent for certain structural
+assumptions (such as functional form). Because of this,
+<code>survAudit</code>’s summary explicitly prompts the analyst to
+generate targeted visual diagnostics for both flagged violations and
+inherently visual checks.</p>
+<p><strong>Overall Calibration</strong> First, we check the overall
+Goodness-of-Fit using the Cox-Snell residuals.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit</span>, which <span class="op">=</span> <span class="st">"functional"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit1</span>, which <span class="op">=</span> <span class="st">"gof"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="survAudit-introduction_files/figure-html/plot-gof-initial-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
+<p>The cumulative hazard of the Cox-Snell residuals generally follows
+the 45-degree reference line, suggesting the overall macro-level
+calibration of the model is acceptable, even if specific covariate
+assumptions are violated.</p>
+<p><strong>Functional Form (Linearity)</strong> The summary explicitly
+reminds us that functional form assessment is inherently visual. If we
+plot the functional form using martingale residuals:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit1</span>, which <span class="op">=</span> <span class="st">"functional"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="survAudit-introduction_files/figure-html/plot-functional-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
-<p>Furthermore, the audit flags multiple highly influential observations
-and outliers. This explicitly prompts the analyst to check the raw data.
-Rather than automatically excluding these observations,
-<code>survAudit</code> preserves them as diagnostic findings requiring
-contextual evaluation.</p>
+<p>For <code>bili</code>, the plot clearly shows a logarithmic curve.
+For <code>protime</code>, the risk appears constant initially before
+sharply increasing. The apparent decrease at extreme values is likely an
+artifact of data sparsity in the right tail, highlighting why visual
+inspection by a domain expert is necessary.</p>
+<p><strong>Proportional Hazards</strong></p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit1</span>, which <span class="op">=</span> <span class="st">"ph"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="survAudit-introduction_files/figure-html/plot-ph-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
+<p>The Schoenfeld residual plots for both <code>protime</code> and
+<code>bili</code> show strong deviations from a horizontal line, making
+it impossible to draw a flat line within their confidence bands. This
+visually confirms the statistical violations flagged in the summary.</p>
+</div>
 </div>
 <div class="section level3">
 <h3 id="model-respecification-an-iterative-process">3. Model Respecification: An Iterative Process<a class="anchor" aria-label="anchor" href="#model-respecification-an-iterative-process"></a>
@@ -295,7 +344,7 @@ contextual evaluation.</p>
 respecification. First, we applied clinically plausible logarithmic
 transformations to bilirubin and prothrombin time to address the
 detected departures from linearity.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Fit an updated model with log transformations</span></span>
 <span><span class="va">fit2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">bili</span><span class="op">)</span> <span class="op">+</span> <span class="va">albumin</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">protime</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">edema</span><span class="op">)</span>,</span>
@@ -305,37 +354,65 @@ detected departures from linearity.</p>
 <span><span class="co"># Re-audit the updated model</span></span>
 <span><span class="va">audit2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/survAudit.html">survAudit</a></span><span class="op">(</span><span class="va">fit2</span>, data <span class="op">=</span> <span class="va">pbc</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">audit2</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ── survAudit: Detailed Diagnostic Report ──────────────────────── </span></span>
+<span><span class="co">#&gt; =================================================================</span></span>
+<span><span class="co">#&gt;              survAudit: Detailed Diagnostic Report               </span></span>
+<span><span class="co">#&gt; =================================================================</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Audit time:  2026-06-23 12:59:11 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Data Context ───────────────────────────────────────────────── </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Sample size:            416 </span></span>
-<span><span class="co">#&gt;   Events:                 160 </span></span>
-<span><span class="co">#&gt;   Censored:              256 (61.5%)</span></span>
-<span><span class="co">#&gt;   Time range:             [41.00, 4795.00] </span></span>
-<span><span class="co">#&gt;   Median time:            1730.00 </span></span>
-<span><span class="co">#&gt;   Time IQR:               [1094.25, 2617.25] </span></span>
-<span><span class="co">#&gt;   Tied event times:      10 (6.2%)</span></span>
-<span><span class="co">#&gt;   Missing data:</span></span>
-<span><span class="co">#&gt;     protime: 2 missing (0.5%)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Model Information ──────────────────────────────────────────── </span></span>
+<span><span class="co">#&gt; ── Data Context &amp; Model Info ──────────────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Formula:       Surv(time, status) ~ age + log(bili) + albumin + log(protime) + factor(edema) </span></span>
-<span><span class="co">#&gt;   Coefficients:  6 </span></span>
-<span><span class="co">#&gt;   Tie method:    efron </span></span>
-<span><span class="co">#&gt;   Converged:     yes </span></span>
+<span><span class="co">#&gt;   Sample size:  416  |  Events: 160  |  Censored: 256 (61.5%)</span></span>
+<span><span class="co">#&gt;   Missing data: protime: 2 missing (0.5%)  |  Tied events: 10 (6.2%)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Global Goodness-of-Fit ─────────────────────────────────────── </span></span>
+<span><span class="co">#&gt; ── 1. Non-Identifiable Assumptions ────────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   These cannot be tested statistically and require domain knowledge:</span></span>
+<span><span class="co">#&gt;     - Independent censoring</span></span>
+<span><span class="co">#&gt;     - Absence of unmeasured confounding</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── 2. Partially Assessable Assumptions ────────────────────────── </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   [ Global Goodness-of-Fit ]</span></span>
 <span><span class="co">#&gt;   Cox-Snell residuals computed.</span></span>
+<span><span class="co">#&gt;   (Use plot(audit, which = "gof") to visually assess macro-calibration.)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Proportional Hazards (cox.zph) ─────────────────────────────── </span></span>
+<span><span class="co">#&gt;   [ Functional Form Assessment ]</span></span>
+<span><span class="co">#&gt;   Continuous variables assessed:  age, log(bili), albumin, log(protime) </span></span>
+<span><span class="co">#&gt;   (Use plot(audit, which = "functional") to visually inspect non-linearity.)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Transform:  Kaplan-Meier </span></span>
+<span><span class="co">#&gt;   [ Influence Diagnostics ]</span></span>
+<span><span class="co">#&gt;   Threshold (2/sqrt(n)):  0.0981 </span></span>
+<span><span class="co">#&gt;   Flagged observations (|dfbetas| &gt; threshold):  74 </span></span>
 <span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Top 5 most influential observations (by max |dfbetas|):</span></span>
+<span><span class="co">#&gt;    Obs       Max |dfbetas| </span></span>
+<span><span class="co">#&gt;    ──────────────────────── </span></span>
+<span><span class="co">#&gt;    325              0.8515 </span></span>
+<span><span class="co">#&gt;    293              0.8103 </span></span>
+<span><span class="co">#&gt;    253              0.7041 </span></span>
+<span><span class="co">#&gt;    81               0.4813 </span></span>
+<span><span class="co">#&gt;    361              0.3525 </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   (Use plot(audit, which = "influence") to visually inspect highly influential cases.)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   [ Outlier Assessment ]</span></span>
+<span><span class="co">#&gt;   Flagged deviance residuals (|resid| &gt; 1.96):        20 </span></span>
+<span><span class="co">#&gt;   Flagged log-odds residuals (|resid| &gt; 3.66):        12 </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Top 5 largest deviance residuals:</span></span>
+<span><span class="co">#&gt;    Obs      Deviance Resid </span></span>
+<span><span class="co">#&gt;    ──────────────────────── </span></span>
+<span><span class="co">#&gt;    87               3.1512 </span></span>
+<span><span class="co">#&gt;    319              3.1109 </span></span>
+<span><span class="co">#&gt;    293             -2.8688 </span></span>
+<span><span class="co">#&gt;    253             -2.7338 </span></span>
+<span><span class="co">#&gt;    119              2.7121 </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   (Use plot(audit, which = "outliers") to visually inspect distributions.)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── 3. Statistically Assessable Assumptions ────────────────────── </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   [ Proportional Hazards ]</span></span>
 <span><span class="co">#&gt;    Variable                     chisq     df          p </span></span>
 <span><span class="co">#&gt;    ──────────────────────────────────────────────────── </span></span>
 <span><span class="co">#&gt;    log(protime)                 8.743      1      0.003 </span></span>
@@ -345,56 +422,15 @@ detected departures from linearity.</p>
 <span><span class="co">#&gt;    age                          0.001      1      0.974 </span></span>
 <span><span class="co">#&gt;    GLOBAL                      14.199      6      0.027 </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Functional Form Assessment ─────────────────────────────────── </span></span>
+<span><span class="co">#&gt;   Global test: significant (p = 0.027)</span></span>
+<span><span class="co">#&gt;   Flagged covariates (p &lt; 0.05): log(protime)</span></span>
+<span><span class="co">#&gt;   (Use plot(audit, which = "ph") to visually assess time-varying effects.)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Continuous variables assessed:  age, log(bili), albumin, log(protime) </span></span>
+<span><span class="co">#&gt;   [ Event Sufficiency (EPV) ]</span></span>
+<span><span class="co">#&gt;   Events Per Variable (EPV):  26.7 </span></span>
+<span><span class="co">#&gt;   Assessment:                 adequate  (target: &gt;= 20)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   age: no departure detected</span></span>
-<span><span class="co">#&gt;   log(bili): no departure detected</span></span>
-<span><span class="co">#&gt;   albumin: no departure detected</span></span>
-<span><span class="co">#&gt;   log(protime): no departure detected</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Influence Diagnostics ──────────────────────────────────────── </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Threshold (2/sqrt(n)):  0.0981 </span></span>
-<span><span class="co">#&gt;   Max |dfbetas|:         0.8515 (obs #325, log(protime))</span></span>
-<span><span class="co">#&gt;   Flagged observations:   74 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Top 5 most influential observations (by max |dfbetas|):</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;    Obs       Max |dfbetas| </span></span>
-<span><span class="co">#&gt;    ──────────────────────── </span></span>
-<span><span class="co">#&gt;    325              0.8515 </span></span>
-<span><span class="co">#&gt;    293              0.8103 </span></span>
-<span><span class="co">#&gt;    253              0.7041 </span></span>
-<span><span class="co">#&gt;    81               0.4813 </span></span>
-<span><span class="co">#&gt;    361              0.3525 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Outlier Assessment ─────────────────────────────────────────── </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Flagged deviance residuals (|resid| &gt; 1.96):        20 </span></span>
-<span><span class="co">#&gt;   Flagged log-odds residuals (|resid| &gt; 3.66):        12 </span></span>
-<span><span class="co">#&gt;   Flagged normal deviate residuals (|resid| &gt; 1.96):  12 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Top 5 largest deviance residuals:</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;    Obs      Deviance Resid </span></span>
-<span><span class="co">#&gt;    ──────────────────────── </span></span>
-<span><span class="co">#&gt;    87               3.1512 </span></span>
-<span><span class="co">#&gt;    319              3.1109 </span></span>
-<span><span class="co">#&gt;    293             -2.8688 </span></span>
-<span><span class="co">#&gt;    253             -2.7338 </span></span>
-<span><span class="co">#&gt;    119              2.7121 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Event Sufficiency (Events Per Variable - EPV) ──────────────── </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Events:                        160 </span></span>
-<span><span class="co">#&gt;   Estimated parameters (coefs):  6 </span></span>
-<span><span class="co">#&gt;   Events Per Variable (EPV):     26.7 </span></span>
-<span><span class="co">#&gt;   Assessment:                    adequate  (target: &gt;= 20)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Collinearity Diagnostics (VIF) ─────────────────────────────── </span></span>
-<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   [ Collinearity Diagnostics (VIF) ]</span></span>
 <span><span class="co">#&gt;   Threshold: VIF &gt; 5 (or scaled GVIF^(1/(2*Df)) &gt; 2.236 for multi-Df terms)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    Term                          GVIF     Df    GVIF^(1/(2*Df)) </span></span>
@@ -405,24 +441,7 @@ detected departures from linearity.</p>
 <span><span class="co">#&gt;    log(protime)                 1.084      1              1.041 </span></span>
 <span><span class="co">#&gt;    factor(edema)                1.228      2              1.053 </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   No collinearity issues detected (all thresholds satisfied).</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Assumption Classification ──────────────────────────────────── </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Non-Identifiable:</span></span>
-<span><span class="co">#&gt;     - Independent censoring</span></span>
-<span><span class="co">#&gt;     - Absence of unmeasured confounding</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Partially Assessable:</span></span>
-<span><span class="co">#&gt;     - functional_form: Assessment of 4 continuous covariate(s) is inherently visual. Use plot(audit, which = 'functional') to inspect martingale residual LOESS smooths for non-linearity.</span></span>
-<span><span class="co">#&gt;     - outlier_impact: Flagged observations: 20 by deviance residuals, 12 by log-odds, 12 by normal deviate.</span></span>
-<span><span class="co">#&gt;     - missing_data: 1 of 5 covariate(s) have missing values (2 total missing entries).</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Statistically Assessable:</span></span>
-<span><span class="co">#&gt;     - proportional_hazards: Global cox.zph test significant (p = 0.027); 1 of 5 covariate(s) flagged at alpha = 0.05.</span></span>
-<span><span class="co">#&gt;     - influence_stability: Max |dfbetas| = 0.8515 (obs 325, variable 'log(protime)'); 74 observation(s) exceed dfbetas threshold.</span></span>
-<span><span class="co">#&gt;     - Collinearity: No collinearity detected; max VIF/scaled GVIF = 1.15.</span></span>
-<span><span class="co">#&gt;     - event_sufficiency: Events-per-variable ratio = 26.7 (160 events / 6 parameters); classified as 'adequate'.</span></span></code></pre></div>
+<span><span class="co">#&gt;   No collinearity issues detected.</span></span></code></pre></div>
 <p>A subsequent re-audit of the updated model reveals the impact of
 these changes. Importantly, the re-audit demonstrates that model
 correction is iterative rather than binary: while the functional form
@@ -432,7 +451,7 @@ additional modeling decisions—such as introducing a time-dependent
 effect or stratification—may still be required.</p>
 <p>We can also verify the global goodness-of-fit of the updated model
 using Cox-Snell residuals:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit2</span>, which <span class="op">=</span> <span class="st">"gof"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="survAudit-introduction_files/figure-html/plot-gof-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
 </div>
@@ -445,7 +464,7 @@ inspect individual diagnostic components, reuse computed quantities, and
 integrate audit results into custom reporting workflows.</p>
 <p>For example, you can extract the underlying Proportional Hazards test
 table:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">audit2</span><span class="op">$</span><span class="va">ph</span><span class="op">$</span><span class="va">table</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                      chisq df           p</span></span>
 <span><span class="co">#&gt; age            0.001048017  1 0.974174526</span></span>
@@ -458,7 +477,7 @@ table:</p>
 statistically. <code>survAudit</code> requires you to document your
 qualitative justification. You can append these directly to the
 object:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">audit2</span><span class="op">$</span><span class="va">assumptions</span><span class="op">$</span><span class="va">non_identifiable</span><span class="op">$</span><span class="va">independent_censoring</span><span class="op">$</span><span class="va">justification</span> <span class="op">&lt;-</span> </span>
 <span>  <span class="st">"Censoring was purely administrative (end of study), satisfying independent censoring."</span></span></code></pre></div>
 <p>If we print the audit again, this justification is now permanently

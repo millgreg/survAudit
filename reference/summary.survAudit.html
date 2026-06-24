@@ -94,59 +94,37 @@ own <code><a href="print.summary.survAudit.html">print.summary.survAudit</a></co
 <span class="r-in"><span>             data <span class="op">=</span> <span class="va">veteran</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">audit</span> <span class="op">&lt;-</span> <span class="fu"><a href="survAudit.html">survAudit</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">audit</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ── survAudit: Detailed Diagnostic Report ──────────────────────── </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> =================================================================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              survAudit: Detailed Diagnostic Report               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> =================================================================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Audit time:  2026-06-23 12:59:07 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ── Data Context ───────────────────────────────────────────────── </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Sample size:            137 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Events:                 128 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Censored:              9 (6.6%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Time range:             [1.00, 999.00] </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Median time:            80.00 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Time IQR:               [25.00, 144.00] </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Tied event times:      55 (43.0%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Missing data:          none (complete case data)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ── Model Information ──────────────────────────────────────────── </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ── Data Context &amp; Model Info ──────────────────────────────────── </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Formula:       Surv(time, status) ~ trt + celltype + karno + age </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Coefficients:  6 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Tie method:    efron </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Converged:     yes </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Sample size:  137  |  Events: 128  |  Censored: 9 (6.6%)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Missing data: none  |  Tied events: 55 (43.0%)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ── Global Goodness-of-Fit ─────────────────────────────────────── </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ── 1. Non-Identifiable Assumptions ────────────────────────────── </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   These cannot be tested statistically and require domain knowledge:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     - Independent censoring</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     - Absence of unmeasured confounding</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ── 2. Partially Assessable Assumptions ────────────────────────── </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [ Global Goodness-of-Fit ]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Cox-Snell residuals computed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   (Use plot(audit, which = "gof") to visually assess macro-calibration.)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ── Proportional Hazards (cox.zph) ─────────────────────────────── </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Transform:  Kaplan-Meier </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Variable                     chisq     df          p </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    ──────────────────────────────────────────────────── </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    karno                       12.977      1     &lt;0.001 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    celltype                    14.884      3      0.002 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    age                          1.874      1      0.171 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    trt                          0.284      1      0.594 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    GLOBAL                      29.179      6     &lt;0.001 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ── Functional Form Assessment ─────────────────────────────────── </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [ Functional Form Assessment ]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Continuous variables assessed:  karno, age </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   (Use plot(audit, which = "functional") to visually inspect non-linearity.)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   karno: no departure detected</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   age: no departure detected</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ── Influence Diagnostics ──────────────────────────────────────── </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [ Influence Diagnostics ]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Threshold (2/sqrt(n)):  0.1709 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Max |dfbetas|:         0.5312 (obs #17, age)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Flagged observations:   20 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Flagged observations (|dfbetas| &gt; threshold):  20 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Top 5 most influential observations (by max |dfbetas|):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    Obs       Max |dfbetas| </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    ──────────────────────── </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    17               0.5312 </span>
@@ -155,14 +133,13 @@ own <code><a href="print.summary.survAudit.html">print.summary.survAudit</a></co
 <span class="r-out co"><span class="r-pr">#&gt;</span>    78               0.3227 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    91               0.2738 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ── Outlier Assessment ─────────────────────────────────────────── </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   (Use plot(audit, which = "influence") to visually inspect highly influential cases.)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [ Outlier Assessment ]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Flagged deviance residuals (|resid| &gt; 1.96):        11 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Flagged log-odds residuals (|resid| &gt; 3.66):        5 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Flagged normal deviate residuals (|resid| &gt; 1.96):  5 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Top 5 largest deviance residuals:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    Obs      Deviance Resid </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    ──────────────────────── </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    44              -3.0770 </span>
@@ -171,15 +148,28 @@ own <code><a href="print.summary.survAudit.html">print.summary.survAudit</a></co
 <span class="r-out co"><span class="r-pr">#&gt;</span>    21              -2.2924 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    15               2.2521 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ── Event Sufficiency (Events Per Variable - EPV) ──────────────── </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   (Use plot(audit, which = "outliers") to visually inspect distributions.)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Events:                        128 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Estimated parameters (coefs):  6 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Events Per Variable (EPV):     21.3 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Assessment:                    adequate  (target: &gt;= 20)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ── 3. Statistically Assessable Assumptions ────────────────────── </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ── Collinearity Diagnostics (VIF) ─────────────────────────────── </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [ Proportional Hazards ]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Variable                     chisq     df          p </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    ──────────────────────────────────────────────────── </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    karno                       12.977      1     &lt;0.001 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    celltype                    14.884      3      0.002 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    age                          1.874      1      0.171 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    trt                          0.284      1      0.594 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    GLOBAL                      29.179      6     &lt;0.001 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Global test: significant (p = &lt;0.001)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Flagged covariates (p &lt; 0.05): karno, celltype</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   (Use plot(audit, which = "ph") to visually assess time-varying effects.)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [ Event Sufficiency (EPV) ]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Events Per Variable (EPV):  21.3 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Assessment:                 adequate  (target: &gt;= 20)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [ Collinearity Diagnostics (VIF) ]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Threshold: VIF &gt; 5 (or scaled GVIF^(1/(2*Df)) &gt; 2.236 for multi-Df terms)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    Term                          GVIF     Df    GVIF^(1/(2*Df)) </span>
@@ -189,25 +179,7 @@ own <code><a href="print.summary.survAudit.html">print.summary.survAudit</a></co
 <span class="r-out co"><span class="r-pr">#&gt;</span>    karno                        1.158      1              1.076 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    age                          1.149      1              1.072 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   No collinearity issues detected (all thresholds satisfied).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ── Assumption Classification ──────────────────────────────────── </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Non-Identifiable:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     - Independent censoring</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     - Absence of unmeasured confounding</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Partially Assessable:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     - functional_form: Assessment of 2 continuous covariate(s) is inherently visual. Use plot(audit, which = 'functional') to inspect martingale residual LOESS smooths for non-linearity.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     - outlier_impact: Flagged observations: 11 by deviance residuals, 5 by log-odds, 5 by normal deviate.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     - missing_data: Complete data: no missing values across 4 covariate(s).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Statistically Assessable:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     - proportional_hazards: Global cox.zph test significant (p = &lt;0.001); 2 of 4 covariate(s) flagged at alpha = 0.05.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     - influence_stability: Max |dfbetas| = 0.5312 (obs 17, variable 'age'); 20 observation(s) exceed dfbetas threshold.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     - Collinearity: No collinearity detected; max VIF/scaled GVIF = 1.24.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     - event_sufficiency: Events-per-variable ratio = 21.3 (128 events / 6 parameters); classified as 'adequate'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   No collinearity issues detected.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>
     </div>
