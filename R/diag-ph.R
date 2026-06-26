@@ -22,9 +22,6 @@
 #'     \item{global_p}{Numeric. The global test p-value (last row of the
 #'       table).}
 #'     \item{transform}{Character. The time transform used.}
-#'     \item{trends}{A data frame with columns \code{variable},
-#'       \code{slope}, and \code{direction} describing the trend direction
-#'       for each covariate.}
 #'   }
 #'
 #' @keywords internal
@@ -67,7 +64,6 @@
     zph = zph,
     table = table_mat,
     global_p = global_p,
-    transform = transform,
-    trends = NULL
+    transform = transform
   )
 }
