@@ -64,8 +64,14 @@
 
   # Time distribution
   time_range <- c(min(times), max(times))
-  time_median <- stats::median(times)
-  time_iqr <- as.numeric(stats::quantile(times, probs = c(0.25, 0.75)))
+  if (counting_process) {
+    # Median and IQR are meaningless for fragmented counting process rows
+    time_median <- NA_real_
+    time_iqr <- c(NA_real_, NA_real_)
+  } else {
+    time_median <- stats::median(times)
+    time_iqr <- as.numeric(stats::quantile(times, probs = c(0.25, 0.75)))
+  }
 
   # Tied event times
   event_times <- times[status == 1]
@@ -86,15 +92,12 @@
     model_terms <- stats::terms(fit)
     term_labels <- attr(model_terms, "term.labels")
 
-    # Identify base variable names (strip interactions, functions, etc.)
-    # Use the variables that actually appear in the data
+    # Identify all base variable names in the model (both LHS and RHS)
+    # This ensures we flag if patients were dropped due to missing survival time or status
     all_vars <- all.vars(stats::formula(fit))
-    # Remove response-related variables (LHS of formula)
-    resp_vars <- all.vars(stats::formula(fit)[[2]])
-    covariate_names <- setdiff(all_vars, resp_vars)
 
-    # Only check variables that exist in the data
-    available_vars <- intersect(covariate_names, names(data))
+    # Only check variables that exist in the provided data
+    available_vars <- intersect(all_vars, names(data))
 
     if (length(available_vars) > 0) {
       n_missing <- vapply(available_vars, function(v) {

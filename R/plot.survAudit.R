@@ -202,7 +202,7 @@ plot.survAudit <- function(x,
     }))
   }
 
-  # Calculate reference horizontal lines (beta hat = colMeans of scaled schoenfeld)
+  # Calculate reference horizontal lines (cox.zph$y contains scaled Schoenfeld + beta_hat, so colMeans recovers beta_hat)
   beta_hat <- colMeans(y_mat, na.rm = TRUE)
   df_ref <- data.frame(
     variable = var_names,

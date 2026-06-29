@@ -15,7 +15,7 @@ Full documentation and a reproducible case study are available at: **[https://mi
    * **Partially Assessable**: Assumptions informed by metrics but requiring clinical/domain judgment (e.g., Outlier Impact, Missing Data).
    * **Statistically Assessable**: Assumptions rigorously testable from data (e.g., Proportional Hazards, Functional Form, Influence Stability, Event Sufficiency).
 2. **Advanced Diagnostics**:
-   * **Collinearity (GVIF)**: Implements the Generalized Variance Inflation Factor (GVIF) algorithm (matching `car` package behavior) to correctly group dummy variables of factor predictors and prevent false collinearity flags.
+   * **Collinearity (GVIF)**: Implements the Generalized Variance Inflation Factor (GVIF) algorithm (Fox & Monette, 1992) to correctly group dummy variables of factor predictors and prevent false collinearity flags.
    * **Functional Form (Linearity)**: Martingale residuals from multivariate reduced models are compared against continuous predictors using LOESS smooths with 95% confidence bands to identify departures from linearity visually.
    * **Visual Diagnostics**: Overall goodness-of-fit via Cox-Snell residuals, Outlier panels (Deviance, Log-Odds), and Influence diagnostics (DFBETAs).
 3. **Auditable R Objects**: Allows documenting qualitative justifications directly on the R object. Saving the object via `saveRDS()` preserves the complete, clinical-grade audit trail alongside the model.

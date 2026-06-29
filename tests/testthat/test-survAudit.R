@@ -163,7 +163,7 @@ test_that("survAudit works with interaction terms", {
   fit_int <- coxph(Surv(time, status) ~ trt * age + karno, data = veteran)
   audit_int <- survAudit(fit_int)
   expect_s3_class(audit_int, "survAudit")
-  # VIF should gracefully handle or flag interaction terms depending on how car::vif acts
+  # VIF should gracefully handle or flag interaction terms
   expect_output(print(audit_int))
 })
 

@@ -3,8 +3,9 @@
 #' Compute Generalized Variance Inflation Factors (GVIF)
 #'
 #' Computes the GVIF for a fitted Cox model to assess multicollinearity
-#' among the predictors. This implementation uses the GVIF method from
-#' the \code{car} package, which correctly groups dummy variables of
+#' among the predictors. This implementation uses the GVIF method described
+#' by Fox and Monette (1992), and is adapted from the implementation in the
+#' \code{car} package (which correctly groups dummy variables of
 #' factor terms to prevent false collinearity flags.
 #'
 #' @param fit A fitted \code{coxph} object.
