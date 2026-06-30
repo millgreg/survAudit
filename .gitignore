@@ -21,3 +21,6 @@ Rplots.pdf
 
 # Manuscript
 manuscript/
+
+# Scratch/Validation
+validation_script.R

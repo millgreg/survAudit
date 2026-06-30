@@ -8,3 +8,4 @@
 ^\.github$
 ^Rplots\.pdf$
 ^manuscript$
+^validation_script\.R$
