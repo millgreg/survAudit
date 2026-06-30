@@ -167,17 +167,23 @@ plot.survAudit <- function(x,
 
   zph <- ph$zph
 
-  # Build long-format data.frame
-  # zph$y is a matrix (time-points x covariates), zph$x is the time axis
-  y_mat <- zph$y
+  # Build long-format data.frame using un-aggregated residuals for full transparency
+  if (!is.null(ph$raw_residuals)) {
+    y_mat <- ph$raw_residuals
+    time_vals <- ph$raw_time
+  } else {
+    # Fallback for older survAudit objects that don't have raw_residuals saved
+    y_mat <- zph$y
+    time_vals <- zph$x
+  }
+  
   if (is.null(dim(y_mat))) {
     # Single covariate
     y_mat <- matrix(y_mat, ncol = 1L)
-    colnames(y_mat) <- names(coef(zph))
+    colnames(y_mat) <- names(stats::coef(zph))
     if (is.null(colnames(y_mat))) colnames(y_mat) <- "covariate"
   }
-
-  time_vals <- zph$x
+  
   n_t <- length(time_vals)
   n_vars <- ncol(y_mat)
   var_names <- colnames(y_mat)
@@ -232,8 +238,10 @@ plot.survAudit <- function(x,
     ) +
     theme_minimal() +
     theme(
-      plot.title  = element_text(size = 12, face = "bold"),
-      strip.text  = element_text(face = "bold")
+      plot.title  = element_text(size = 14, face = "bold"),
+      axis.title  = element_text(size = 12),
+      axis.text   = element_text(size = 10),
+      strip.text  = element_text(size = 12, face = "bold")
     )
 }
 
@@ -296,8 +304,10 @@ plot.survAudit <- function(x,
     ) +
     theme_minimal() +
     theme(
-      plot.title  = element_text(size = 12, face = "bold"),
-      strip.text  = element_text(face = "bold")
+      plot.title  = element_text(size = 14, face = "bold"),
+      axis.title  = element_text(size = 12),
+      axis.text   = element_text(size = 10),
+      strip.text  = element_text(size = 12, face = "bold")
     )
 }
 
@@ -357,8 +367,10 @@ plot.survAudit <- function(x,
     ) +
     theme_minimal() +
     theme(
-      plot.title  = element_text(size = 12, face = "bold"),
-      strip.text  = element_text(face = "bold")
+      plot.title  = element_text(size = 14, face = "bold"),
+      axis.title  = element_text(size = 12),
+      axis.text   = element_text(size = 10),
+      strip.text  = element_text(size = 12, face = "bold")
     )
 }
 
@@ -412,8 +424,10 @@ plot.survAudit <- function(x,
     ) +
     theme_minimal() +
     theme(
-      plot.title  = element_text(size = 12, face = "bold"),
-      strip.text  = element_text(face = "bold")
+      plot.title  = element_text(size = 14, face = "bold"),
+      axis.title  = element_text(size = 12),
+      axis.text   = element_text(size = 10),
+      strip.text  = element_text(size = 12, face = "bold")
     )
 }
 
@@ -444,6 +458,8 @@ plot.survAudit <- function(x,
     ) +
     theme_minimal() +
     theme(
-      plot.title    = element_text(size = 12, face = "bold")
+      plot.title    = element_text(size = 14, face = "bold"),
+      axis.title    = element_text(size = 12),
+      axis.text     = element_text(size = 10)
     )
 }

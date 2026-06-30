@@ -51,19 +51,21 @@
     covariate_names <- rownames(table_mat)[1]
   }
 
-  # Ensure schoenfeld_resid is a matrix
-  if (!is.matrix(schoenfeld_resid)) {
-    schoenfeld_resid <- matrix(
-      schoenfeld_resid,
-      ncol = 1,
-      dimnames = list(NULL, covariate_names[1])
-    )
+  # Extract the un-aggregated scaled Schoenfeld residuals for each dummy coefficient
+  # We do this instead of zph$y because newer versions of survival aggregate multi-df terms,
+  # which masks opposing time-varying effects within a categorical factor.
+  raw_resid <- residuals(fit, type = "scaledsch")
+  if (is.null(dim(raw_resid))) {
+    raw_resid <- matrix(raw_resid, ncol = 1L)
+    colnames(raw_resid) <- names(stats::coef(fit))
   }
 
   list(
     zph = zph,
     table = table_mat,
     global_p = global_p,
-    transform = transform
+    transform = transform,
+    raw_residuals = raw_resid,
+    raw_time = transformed_time
   )
 }
