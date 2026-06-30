@@ -3,9 +3,9 @@
 #' Compute functional form diagnostics for continuous covariates
 #'
 #' Assesses the linearity assumption for each continuous covariate using
-#' martingale residuals from a null Cox model (a model with no covariates),
-#' following the approach recommended by Therneau and Grambsch (2000).
-#' For each continuous covariate, a loess smooth of the null model
+#' martingale residuals from a restricted Cox model (a model excluding the
+#' specific covariate being assessed).
+#' For each continuous covariate, a loess smooth of the restricted model
 #' martingale residuals against the covariate values is compared to a
 #' linear fit to screen for departures from linearity.
 #'
@@ -22,7 +22,7 @@
 #'       covariate and contains:
 #'       \describe{
 #'         \item{residuals}{Numeric vector of martingale residuals from the
-#'           null model.}
+#'           restricted model.}
 #'         \item{covariate_values}{Numeric vector of covariate values.}
 #'         \item{loess_fit}{The \code{loess} object.}
 #'         \item{departure_detected}{Logical indicating whether the loess
@@ -53,28 +53,19 @@
   # Extract the Surv object from the model frame
   surv_obj <- stats::model.response(mf)
 
-  # Fit a single null Cox model (no covariates) — Therneau & Grambsch (2000)
-  null_fit <- tryCatch(
-    survival::coxph(surv_obj ~ 1),
-    error = function(e) {
-      warning("Null Cox model fitting failed: ", conditionMessage(e),
-              call. = FALSE)
-      NULL
-    }
-  )
-
-  if (is.null(null_fit)) {
-    return(list(
-      continuous_vars = continuous_vars,
-      results = results
-    ))
-  }
-
-  # Extract martingale residuals from the null model ONCE
-  mart_resid <- stats::residuals(null_fit, type = "martingale")
-
+  orig_formula <- stats::formula(fit)
+  
   for (var in continuous_vars) {
     result <- tryCatch({
+      # 1. Build a restricted formula excluding the specific covariate
+      # This computes martingale residuals adjusted for all OTHER covariates in the model.
+      restricted_formula <- stats::update(orig_formula, paste(". ~ . -", var))
+      
+      # 2. Fit the restricted Cox model
+      restricted_fit <- survival::coxph(restricted_formula, data = data_complete)
+      
+      # 3. Extract martingale residuals from this restricted model
+      mart_resid <- stats::residuals(restricted_fit, type = "martingale")
       # Get covariate values from the model frame
       covariate_values <- mf[[var]]
 

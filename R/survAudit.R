@@ -59,26 +59,14 @@ survAudit <- function(fit, data = NULL, alpha = 0.05, ph_transform = "km") {
 
  audit_time <- Sys.time()
 
- # ── 2. Extract data from model if not provided ────────────────────
- data_available <- TRUE
+ # ── 2. Handle data ───────────────────────────────────────────────
  if (is.null(data)) {
-   data <- tryCatch(
-     {
-       d <- fit$model
-       if (is.null(d)) d <- model.frame(fit)
-       d
-     },
-     error = function(e) NULL
+   stop(
+     "The `data` argument must be provided to survAudit(). ",
+     "It is required to accurately compute missing data and to refit ",
+     "restricted models for functional form diagnostics.",
+     call. = FALSE
    )
-   if (is.null(data)) {
-     warning(
-       "Could not extract data from model object. ",
-       "Some diagnostics (functional form) may be unavailable. ",
-       "Provide the data explicitly via the `data` argument.",
-       call. = FALSE
-     )
-     data_available <- FALSE
-   }
  }
 
  # ── 3. Extract model info ─────────────────────────────────────────
@@ -95,52 +83,65 @@ survAudit <- function(fit, data = NULL, alpha = 0.05, ph_transform = "km") {
  )
 
  # ── 5. Identify continuous variables ──────────────────────────────
- continuous_vars <- if (data_available) {
-   tryCatch(
-     .get_continuous_vars(fit, data),
-     error = function(e) {
-       warning("Could not identify continuous variables: ",
-               conditionMessage(e), call. = FALSE)
-       character(0)
-     }
-   )
- } else {
-   character(0)
- }
+ continuous_vars <- tryCatch(
+   .get_continuous_vars(fit, data),
+   error = function(e) {
+     warning("Could not identify continuous variables: ",
+             conditionMessage(e), call. = FALSE)
+     character(0)
+   }
+ )
 
  # ── 6. Run all diagnostic engines ─────────────────────────────────
- ph <- tryCatch(
-   .compute_ph_diagnostics(fit, transform = ph_transform, alpha = alpha),
-   error = function(e) {
-     warning("PH diagnostics failed: ", conditionMessage(e),
-             call. = FALSE)
-     NULL
-   }
- )
-
- functional_form <- tryCatch(
-   {
-     if (!data_available || length(continuous_vars) == 0L) {
+ 
+ if (model_info$n_coef == 0L) {
+   ph <- NULL
+   functional_form <- NULL
+   influence <- NULL
+   vif <- NULL
+ } else {
+   ph <- tryCatch(
+     .compute_ph_diagnostics(fit, transform = ph_transform, alpha = alpha),
+     error = function(e) {
+       warning("PH diagnostics failed: ", conditionMessage(e),
+               call. = FALSE)
        NULL
-     } else {
-       .compute_functional_form(fit, data, continuous_vars)
      }
-   },
-   error = function(e) {
-     warning("Functional form diagnostics failed: ",
-             conditionMessage(e), call. = FALSE)
-     NULL
-   }
- )
+   )
 
- influence <- tryCatch(
-   .compute_influence(fit),
-   error = function(e) {
-     warning("Influence diagnostics failed: ", conditionMessage(e),
-             call. = FALSE)
-     NULL
-   }
- )
+   functional_form <- tryCatch(
+     {
+       if (length(continuous_vars) == 0L) {
+         NULL
+       } else {
+         .compute_functional_form(fit, data, continuous_vars)
+       }
+     },
+     error = function(e) {
+       warning("Functional form diagnostics failed: ",
+               conditionMessage(e), call. = FALSE)
+       NULL
+     }
+   )
+
+   influence <- tryCatch(
+     .compute_influence(fit),
+     error = function(e) {
+       warning("Influence diagnostics failed: ", conditionMessage(e),
+               call. = FALSE)
+       NULL
+     }
+   )
+   
+   vif <- tryCatch(
+     .compute_vif(fit),
+     error = function(e) {
+       warning("VIF computation failed: ", conditionMessage(e),
+               call. = FALSE)
+       NULL
+     }
+   )
+ }
 
  outliers <- tryCatch(
    .compute_outliers(fit),
@@ -155,15 +156,6 @@ survAudit <- function(fit, data = NULL, alpha = 0.05, ph_transform = "km") {
    .compute_epv(fit),
    error = function(e) {
      warning("EPV computation failed: ", conditionMessage(e),
-             call. = FALSE)
-     NULL
-   }
- )
-
- vif <- tryCatch(
-   .compute_vif(fit),
-   error = function(e) {
-     warning("VIF computation failed: ", conditionMessage(e),
              call. = FALSE)
      NULL
    }
