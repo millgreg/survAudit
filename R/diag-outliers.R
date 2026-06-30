@@ -54,9 +54,9 @@
   normal_deviate <- stats::qnorm(S_clamped)
 
   # Flag observations exceeding thresholds
-  flagged_deviance <- as.integer(which(abs(deviance) > 1.96))
-  flagged_log_odds <- as.integer(which(abs(log_odds) > 3.66))
-  flagged_normal_deviate <- as.integer(which(abs(normal_deviate) > 1.96))
+  flagged_deviance <- names(deviance)[which(abs(deviance) > 1.96)]
+  flagged_log_odds <- names(log_odds)[which(abs(log_odds) > 3.66)]
+  flagged_normal_deviate <- names(normal_deviate)[which(abs(normal_deviate) > 1.96)]
 
   list(
     martingale = martingale,

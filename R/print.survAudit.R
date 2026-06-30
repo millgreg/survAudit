@@ -130,7 +130,7 @@ print.survAudit <- function(x, ...) {
     inf <- x$influence
     cat("    Max |dfbetas|: ",
         sprintf("%.2f", inf$max_dfbetas$value),
-        " (obs #", inf$max_dfbetas$obs,
+        " (obs ", inf$max_dfbetas$obs,
         ", covariate: ", inf$max_dfbetas$variable, ")\n", sep = "")
   } else {
     cat("    not available\n")

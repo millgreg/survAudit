@@ -59,7 +59,7 @@
 
   max_dfbetas <- list(
     value = abs_dfbetas[max_row, max_col],
-    obs = as.integer(max_row),
+    obs = rownames(dfbetas)[max_row],
     variable = colnames(dfbetas)[max_col]
   )
 
@@ -67,7 +67,7 @@
   flagged_rows <- which(apply(abs_dfbetas, 1, function(row) {
     any(row > threshold)
   }))
-  flagged_obs <- as.integer(flagged_rows)
+  flagged_obs <- rownames(dfbetas)[flagged_rows]
 
   list(
     dfbeta = dfbeta,

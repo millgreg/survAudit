@@ -45,7 +45,7 @@ summary.survAudit <- function(object, ...) {
       n_show <- min(5L, length(max_abs_dfb))
       top_idx <- order(max_abs_dfb, decreasing = TRUE)[seq_len(n_show)]
       out$top_influence <- data.frame(
-        obs            = top_idx,
+        obs            = names(max_abs_dfb)[top_idx],
         max_abs_dfbetas = max_abs_dfb[top_idx],
         stringsAsFactors = FALSE
       )
@@ -58,7 +58,7 @@ summary.survAudit <- function(object, ...) {
     n_show <- min(5L, length(dev_r))
     top_idx <- order(abs(dev_r), decreasing = TRUE)[seq_len(n_show)]
     out$top_deviance <- data.frame(
-      obs              = top_idx,
+      obs              = names(dev_r)[top_idx],
       deviance_residual = dev_r[top_idx],
       stringsAsFactors  = FALSE
     )
@@ -192,7 +192,7 @@ print.summary.survAudit <- function(x, ...) {
       cat("  ", .rule_line(24), "\n")
       ti <- x$top_influence
       for (i in seq_len(nrow(ti))) {
-        cat("  ", sprintf("%-8d %14.4f", ti$obs[i], ti$max_abs_dfbetas[i]), "\n")
+        cat("  ", sprintf("%-8s %14.4f", ti$obs[i], ti$max_abs_dfbetas[i]), "\n")
       }
     }
     cat("\n  (Use plot(audit, which = \"influence\") to visually inspect highly influential cases.)\n")
@@ -213,7 +213,7 @@ print.summary.survAudit <- function(x, ...) {
       cat("  ", .rule_line(24), "\n")
       td <- x$top_deviance
       for (i in seq_len(nrow(td))) {
-        cat("  ", sprintf("%-8d %14.4f", td$obs[i], td$deviance_residual[i]), "\n")
+        cat("  ", sprintf("%-8s %14.4f", td$obs[i], td$deviance_residual[i]), "\n")
       }
     }
     cat("\n  (Use plot(audit, which = \"outliers\") to visually inspect distributions.)\n")

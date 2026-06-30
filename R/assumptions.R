@@ -159,6 +159,10 @@
 #' @keywords internal
 #' @noRd
 .summarize_ph <- function(ph, alpha) {
+  if (is.null(ph)) {
+    return("not available")
+  }
+
   global_p <- ph$global_p
   p_str <- .format_p(global_p)
 
@@ -216,6 +220,10 @@
 #' @keywords internal
 #' @noRd
 .summarize_influence <- function(influence) {
+  if (is.null(influence)) {
+    return("not available")
+  }
+
   max_dfb <- influence$max_dfbetas
   n_flagged <- length(influence$flagged_obs)
 
@@ -232,6 +240,10 @@
 #' @keywords internal
 #' @noRd
 .summarize_epv <- function(epv) {
+  if (is.null(epv)) {
+    return("not available")
+  }
+
   paste0(
     "Events-per-variable ratio = ",
     formatC(epv$ratio, format = "f", digits = 1),
@@ -276,13 +288,10 @@
   n_vars_missing <- sum(md$n_missing > 0)
 
   if (total_missing == 0) {
-    paste0("Complete data: no missing values across ", nrow(md), " covariate(s).")
+    paste0("Complete data: no missing values across ", nrow(md), " variable(s).")
   } else {
-    paste0(
-      n_vars_missing, " of ", nrow(md),
-      " covariate(s) have missing values (",
-      total_missing, " total missing entries)."
-    )
+    sprintf("%d of %d variable(s) have missing values (%d total missing entries).",
+            n_vars_missing, nrow(md), total_missing)
   }
 }
 
