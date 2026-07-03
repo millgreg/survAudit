@@ -106,12 +106,12 @@ test_that("survAudit works with a single-covariate model", {
   expect_output(print(audit))
 })
 
-# ── Test 9: survAudit works when data is explicitly provided ─────
-test_that("survAudit works when data is explicitly provided", {
-  audit <- survAudit(fit, data = veteran)
-  expect_s3_class(audit, "survAudit")
-  # Data context should be present
-  expect_false(is.null(audit$data_context))
+# ── Test 9: survAudit() errors when data argument is omitted ─────
+test_that("survAudit() errors when data argument is omitted", {
+  expect_error(
+    survAudit(fit),
+    "The `data` argument must be provided to survAudit()"
+  )
 })
 
 # ── Test 10: Non-identifiable assumptions have NULL justification ─
