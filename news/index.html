@@ -52,6 +52,17 @@
     </div>
 
     <div class="section level2">
+<h2 class="page-header" data-toc-text="1.1.0" id="survaudit-110">survAudit 1.1.0<a class="anchor" aria-label="anchor" href="#survaudit-110"></a></h2>
+<ul><li>
+<strong>Bug Fix</strong>: Fixed indexing logic for all influence and outlier diagnostic outputs to use the original row names instead of complete-case row numbers, preventing incorrect matching when models drop missing data.</li>
+<li>
+<strong>Bug Fix</strong>: Functional form logic now requires the <code>data</code> argument and successfully refits restricted models even when the dataset contains missing rows.</li>
+<li>
+<strong>Bug Fix</strong>: Proportional hazards visualization now successfully plots un-aggregated scaled Schoenfeld residuals for all dummy variables of a categorical covariate.</li>
+<li>
+<strong>Documentation</strong>: The primary vignette and case study were rewritten to focus strictly on practical diagnostic interpretation, completely removing promotional language. Added explicit methodological caveats regarding the sample-size sensitivity and linear restrictions of the <code>cox.zph</code> test.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="page-header" data-toc-text="0.1.0" id="survaudit-010">survAudit 0.1.0<a class="anchor" aria-label="anchor" href="#survaudit-010"></a></h2>
 <ul><li>Initial release of <code>survAudit</code>, providing a unified diagnostic auditing framework for Cox Proportional Hazards models.</li>
 <li>Implements a structured assumption ontology categorizing assumptions into Statistically Assessable, Partially Assessable, and Non-Identifiable.</li>
