@@ -185,3 +185,61 @@ test_that("survAudit handles missing data properly", {
   expect_no_error(plot(audit_miss, which = "ph", ask = FALSE))
   expect_no_error(plot(audit_miss, which = "functional", ask = FALSE))
 })
+
+# ── Test 16: Graceful degradation on engine failures ──────────────
+test_that("survAudit gracefully handles engine failures via tryCatch", {
+  fit_broken <- fit
+  fit_broken$var <- matrix("string", nrow = 1, ncol = 1)
+  
+  suppressWarnings(
+    expect_warning(audit_broken <- survAudit(fit_broken, data = veteran), "VIF computation failed|Influence diagnostics failed|PH diagnostics failed")
+  )
+  
+  expect_s3_class(audit_broken, "survAudit")
+  expect_null(audit_broken$influence)
+  expect_null(audit_broken$vif)
+})
+
+# ── Test 17: Zero covariate (null) models ─────────────────────────
+test_that("survAudit handles zero covariate models gracefully", {
+  fit_null <- coxph(Surv(time, status) ~ 1, data = veteran)
+  audit_null <- survAudit(fit_null, data = veteran)
+  
+  expect_s3_class(audit_null, "survAudit")
+  expect_null(audit_null$ph)
+  expect_null(audit_null$functional_form)
+  expect_null(audit_null$influence)
+  expect_null(audit_null$vif)
+  
+  expect_false(is.null(audit_null$outliers))
+  expect_false(is.null(audit_null$gof))
+  
+  expect_output(print(audit_null))
+  expect_output(print(summary(audit_null)))
+  expect_no_error(plot(audit_null, which = "outliers", ask = FALSE))
+})
+
+# ── Test 18: Models with only categorical covariates ──────────────
+test_that("survAudit handles models with no continuous covariates", {
+  fit_cat <- coxph(Surv(time, status) ~ celltype + factor(trt), data = veteran)
+  audit_cat <- survAudit(fit_cat, data = veteran)
+  
+  expect_s3_class(audit_cat, "survAudit")
+  expect_null(audit_cat$functional_form)
+  expect_no_error(plot(audit_cat, which = "functional", ask = FALSE))
+})
+
+# ── Test 19: Display methods degrade gracefully ───────────────────
+test_that("Display methods degrade gracefully when components are missing", {
+  audit_partial <- survAudit(fit, data = veteran)
+  
+  audit_partial$vif <- NULL
+  audit_partial$ph <- NULL
+  audit_partial$influence <- NULL
+  
+  expect_output(print(audit_partial))
+  expect_output(print(summary(audit_partial)))
+  
+  expect_message(plot(audit_partial, which = "ph", ask = FALSE), "PH diagnostics not available")
+  expect_message(plot(audit_partial, which = "influence", ask = FALSE), "Influence diagnostics not available")
+})
