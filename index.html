@@ -75,9 +75,9 @@
 </h1></div>
 <p><a href="https://github.com/millgreg/survAudit/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/millgreg/survAudit/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></p>
 <blockquote>
-<p>An Auditing and Transparency Framework for Cox Proportional Hazards Models</p>
+<p>Comprehensive Diagnostics for Cox Proportional Hazards Models</p>
 </blockquote>
-<p><code>survAudit</code> provides a unified diagnostic auditing framework for Cox proportional hazards (PH) models. Rather than relying on fragmented diagnostic plots and tests, <code>survAudit</code> aggregates critical statistical diagnostics into a structured <strong>Assumption Classification</strong> and provides a mechanism to document qualitative justifications for non-testable assumptions directly on the R model audit object.</p>
+<p><code>survAudit</code> provides a unified diagnostic auditing framework for Cox proportional hazards (PH) models. It aggregates statistical diagnostics into a structured <strong>Assumption Classification</strong> and provides a mechanism to document qualitative justifications for non-identifiable assumptions directly on the R model audit object.</p>
 <p>Full documentation and a reproducible case study are available at: <strong><a href="https://millgreg.github.io/survAudit" class="external-link">https://millgreg.github.io/survAudit</a></strong></p>
 <div class="section level2">
 <h2 id="features">Features<a class="anchor" aria-label="anchor" href="#features"></a>
@@ -95,19 +95,33 @@
 </ul>
 </li>
 <li>
-<strong>Advanced Diagnostics</strong>:
+<strong>Aggregated Diagnostics</strong>:
 <ul>
 <li>
-<strong>Collinearity (GVIF)</strong>: Implements the Generalized Variance Inflation Factor (GVIF) algorithm (Fox &amp; Monette, 1992) to correctly group dummy variables of factor predictors and prevent false collinearity flags.</li>
+<strong>Collinearity (GVIF)</strong>: Implements the Generalized Variance Inflation Factor (GVIF) algorithm (Fox &amp; Monette, 1992) to group dummy variables of factor predictors.</li>
 <li>
-<strong>Functional Form (Linearity)</strong>: Martingale residuals from multivariate reduced models are compared against continuous predictors using LOESS smooths with 95% confidence bands to identify departures from linearity visually.</li>
+<strong>Functional Form (Linearity)</strong>: Martingale residuals from multivariate reduced models are compared against continuous predictors using LOESS smooths.</li>
 <li>
-<strong>Visual Diagnostics</strong>: Overall goodness-of-fit via Cox-Snell residuals, Outlier panels (Deviance, Log-Odds), and Influence diagnostics (DFBETAs).</li>
+<strong>Visual Diagnostics</strong>: Overall goodness-of-fit via Cox-Snell residuals, outlier panels, and influence diagnostics.</li>
 </ul>
 </li>
 <li>
-<strong>Auditable R Objects</strong>: Allows documenting qualitative justifications directly on the R object. Saving the object via <code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS()</a></code> preserves the complete, clinical-grade audit trail alongside the model.</li>
+<strong>Auditable R Objects</strong>: Allows documenting qualitative justifications directly on the R object. Saving the object via <code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS()</a></code> preserves the audit trail alongside the model.</li>
 </ol>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="methodological-notes">Methodological Notes<a class="anchor" aria-label="anchor" href="#methodological-notes"></a>
+</h2>
+<p>The diagnostics in <code>survAudit</code> are statistical tests and heuristics. They have inherent limitations that require critical scientific judgment:</p>
+<ul>
+<li>
+<strong>Proportional Hazards</strong>: The global and variable-specific PH tests (via <code><a href="https://rdrr.io/pkg/survival/man/cox.zph.html" class="external-link">cox.zph()</a></code>) only check for <em>linear</em> deviations from proportional hazards. Furthermore, these tests can be overly sensitive in large sample sizes, flagging minor, clinically irrelevant violations. Visual inspection of the scaled Schoenfeld residuals is strictly recommended.</li>
+<li>
+<strong>Functional Form</strong>: LOESS smoothing of martingale residuals is highly sensitive to the distribution of covariates. Confidence bands widen significantly in the tails where data is sparse, so perceived non-linearities at the extremes should be interpreted with caution.</li>
+<li>
+<strong>Non-testability</strong>: Statistical models cannot verify their own causal structure. The assumptions of independent censoring and unmeasured confounding <em>cannot</em> be verified from the observed data and rely entirely on study design and domain knowledge.</li>
+</ul>
 <hr>
 </div>
 <div class="section level2">
@@ -121,7 +135,7 @@
 <p>Alternatively, if you have the source archive downloaded, you can install it manually:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Install the built source archive locally</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"survAudit_1.0.0.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"survAudit_1.1.0.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -174,6 +188,24 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">audit</span>, <span class="st">"cox_model_audit.rds"</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
+</div>
+<div class="section level2">
+<h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
+</h2>
+<p>If you use <code>survAudit</code> in your research, please cite it:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="va">@Manual</span>{,</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="dt">title</span> = {survAudit: Comprehensive Diagnostics for Cox Proportional Hazards Models},</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="dt">author</span> = {Gregor Miller},</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="dt">year</span> = {2026},</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="dt">note</span> = {R package version 1.1.0},</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="dt">url</span> = {https://millgreg.github.io/survAudit},</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>
+</h2>
+<p><code>survAudit</code> builds heavily on the foundations provided by the <a href="https://cran.r-project.org/package=survival" class="external-link"><code>survival</code></a> package (Therneau, 2024) for model fitting and residual calculations. Visual diagnostics are implemented using <code>ggplot2</code> and <code>patchwork</code>.</p>
+<hr>
 </div>
 <div class="section level2">
 <h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
