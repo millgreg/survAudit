@@ -11,19 +11,19 @@ fit <- coxph(Surv(time, status) ~ trt + celltype + karno + age,
 
 # ── Test 1: survAudit() returns correct class ────────────────────
 test_that("survAudit() returns an object of class 'survAudit'", {
-  audit <- survAudit(fit)
+  audit <- survAudit(fit, data = veteran)
   expect_s3_class(audit, "survAudit")
 })
 
 # ── Test 2: print() runs without error ───────────────────────────
 test_that("print.survAudit() runs without error", {
-  audit <- survAudit(fit)
+  audit <- survAudit(fit, data = veteran)
   expect_output(print(audit))
 })
 
 # ── Test 3: summary() runs without error ─────────────────────────
 test_that("summary.survAudit() runs without error", {
-  audit <- survAudit(fit)
+  audit <- survAudit(fit, data = veteran)
   s <- summary(audit)
   expect_s3_class(s, "summary.survAudit")
   expect_output(print(s))
@@ -31,39 +31,39 @@ test_that("summary.survAudit() runs without error", {
 
 # ── Test 4: plot() runs without error for each 'which' value ─────
 test_that("plot.survAudit() runs without error for 'ph'", {
-  audit <- survAudit(fit)
+  audit <- survAudit(fit, data = veteran)
   p <- plot(audit, which = "ph", ask = FALSE)
   expect_true(inherits(p, "gg") || inherits(p, "ggplot"))
 })
 
 test_that("plot.survAudit() runs without error for 'influence'", {
-  audit <- survAudit(fit)
+  audit <- survAudit(fit, data = veteran)
   p <- plot(audit, which = "influence", ask = FALSE)
   expect_true(inherits(p, "gg") || inherits(p, "ggplot"))
 })
 
 test_that("plot.survAudit() runs without error for 'outliers'", {
-  audit <- survAudit(fit)
+  audit <- survAudit(fit, data = veteran)
   p <- plot(audit, which = "outliers", ask = FALSE)
   expect_true(inherits(p, "gg") || inherits(p, "ggplot"))
 })
 
 test_that("plot.survAudit() runs without error for 'functional'", {
-  audit <- survAudit(fit)
+  audit <- survAudit(fit, data = veteran)
   # functional may be NULL if no continuous vars detected;
   # should not error either way
   expect_no_error(plot(audit, which = "functional", ask = FALSE))
 })
 
 test_that("plot.survAudit() runs without error for 'gof'", {
-  audit <- survAudit(fit)
+  audit <- survAudit(fit, data = veteran)
   p <- plot(audit, which = "gof", ask = FALSE)
   expect_true(inherits(p, "gg") || inherits(p, "ggplot"))
 })
 
 # ── Test 5: EPV is computed correctly ────────────────────────────
 test_that("EPV is computed correctly against manual calculation", {
-  audit <- survAudit(fit)
+  audit <- survAudit(fit, data = veteran)
   skip_if(is.null(audit$epv), "EPV diagnostics not available")
 
   # Manual calculation
@@ -81,7 +81,7 @@ test_that("EPV is computed correctly against manual calculation", {
 
 # ── Test 6: All components of the audit object are present ───────
 test_that("survAudit object has all expected components", {
-  audit <- survAudit(fit)
+  audit <- survAudit(fit, data = veteran)
   expected_names <- c("model_info", "data_context", "ph",
                       "functional_form", "influence", "outliers",
                       "epv", "vif", "gof", "assumptions", "alpha", "audit_time")
@@ -101,7 +101,7 @@ test_that("survAudit() errors on non-coxph input", {
 # ── Test 8: survAudit works with a single-covariate model ────────
 test_that("survAudit works with a single-covariate model", {
   fit_single <- coxph(Surv(time, status) ~ karno, data = veteran)
-  audit <- survAudit(fit_single)
+  audit <- survAudit(fit_single, data = veteran)
   expect_s3_class(audit, "survAudit")
   expect_output(print(audit))
 })
@@ -116,7 +116,7 @@ test_that("survAudit works when data is explicitly provided", {
 
 # ── Test 10: Non-identifiable assumptions have NULL justification ─
 test_that("Non-identifiable assumptions have NULL justification by default", {
-  audit <- survAudit(fit)
+  audit <- survAudit(fit, data = veteran)
   skip_if(is.null(audit$assumptions),
           "Assumption ontology not available")
 
@@ -132,19 +132,19 @@ test_that("Non-identifiable assumptions have NULL justification by default", {
 
 # ── Test 11: alpha parameter is respected ────────────────────────
 test_that("alpha parameter is stored correctly", {
-  audit_default <- survAudit(fit)
+  audit_default <- survAudit(fit, data = veteran)
   expect_equal(audit_default$alpha, 0.05)
 
-  audit_strict <- survAudit(fit, alpha = 0.01)
+  audit_strict <- survAudit(fit, data = veteran, alpha = 0.01)
   expect_equal(audit_strict$alpha, 0.01)
 })
 
 # ── Test 12: Invalid alpha produces error ────────────────────────
 test_that("Invalid alpha values produce errors", {
-  expect_error(survAudit(fit, alpha = 0))
-  expect_error(survAudit(fit, alpha = 1))
-  expect_error(survAudit(fit, alpha = -0.5))
-  expect_error(survAudit(fit, alpha = "abc"))
+  expect_error(survAudit(fit, data = veteran, alpha = 0))
+  expect_error(survAudit(fit, data = veteran, alpha = 1))
+  expect_error(survAudit(fit, data = veteran, alpha = -0.5))
+  expect_error(survAudit(fit, data = veteran, alpha = "abc"))
 })
 
 # ── Test 13: VIF is calculated correctly ─────────────────────────
@@ -161,7 +161,7 @@ test_that("VIF is calculated correctly and handles factor terms", {
 # ── Test 14: survAudit works with models containing interaction terms ───
 test_that("survAudit works with interaction terms", {
   fit_int <- coxph(Surv(time, status) ~ trt * age + karno, data = veteran)
-  audit_int <- survAudit(fit_int)
+  audit_int <- survAudit(fit_int, data = veteran)
   expect_s3_class(audit_int, "survAudit")
   # VIF should gracefully handle or flag interaction terms
   expect_output(print(audit_int))
