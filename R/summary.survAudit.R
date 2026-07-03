@@ -18,7 +18,7 @@
 #' library(survival)
 #' fit <- coxph(Surv(time, status) ~ trt + celltype + karno + age,
 #'              data = veteran)
-#' audit <- survAudit(fit)
+#' audit <- survAudit(fit, data = veteran)
 #' summary(audit)
 summary.survAudit <- function(object, ...) {
 
@@ -84,7 +84,7 @@ summary.survAudit <- function(object, ...) {
 #' library(survival)
 #' fit <- coxph(Surv(time, status) ~ trt + celltype + karno + age,
 #'              data = veteran)
-#' audit <- survAudit(fit)
+#' audit <- survAudit(fit, data = veteran)
 #' s <- summary(audit)
 #' print(s)
 print.summary.survAudit <- function(x, ...) {

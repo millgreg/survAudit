@@ -48,7 +48,7 @@
 #' library(survival)
 #' fit <- coxph(Surv(time, status) ~ trt + celltype + karno + age,
 #'              data = veteran)
-#' audit <- survAudit(fit)
+#' audit <- survAudit(fit, data = veteran)
 #' plot(audit, which = "ph")
 plot.survAudit <- function(x,
                            which = c("ph", "functional",

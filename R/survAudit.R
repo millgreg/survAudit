@@ -42,7 +42,7 @@
 #' library(survival)
 #' fit <- coxph(Surv(time, status) ~ trt + celltype + karno + age,
 #'              data = veteran)
-#' audit <- survAudit(fit)
+#' audit <- survAudit(fit, data = veteran)
 #' print(audit)
 survAudit <- function(fit, data = NULL, alpha = 0.05, ph_transform = "km") {
 

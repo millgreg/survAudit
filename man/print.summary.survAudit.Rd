@@ -21,7 +21,7 @@ Renders the detailed diagnostic summary to the console.
 library(survival)
 fit <- coxph(Surv(time, status) ~ trt + celltype + karno + age,
              data = veteran)
-audit <- survAudit(fit)
+audit <- survAudit(fit, data = veteran)
 s <- summary(audit)
 print(s)
 }
