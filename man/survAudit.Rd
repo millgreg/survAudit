@@ -48,6 +48,42 @@ hazards model, including proportional hazards testing, functional form
 assessment, influence diagnostics, outlier detection, and event
 sufficiency checks.
 }
+\details{
+\strong{Methodology}
+
+\code{survAudit} executes a battery of statistical and diagnostic checks
+against a fitted Cox model, aggregating the results into a unified framework.
+The audit focuses on the fundamental assumptions of Cox regression:
+\itemize{
+\item \strong{Proportional Hazards:} Evaluated via Schoenfeld residuals and
+the \code{cox.zph} test.
+\item \strong{Functional Form:} Evaluated by extracting martingale residuals
+from reduced null models (excluding the covariate of interest) and fitting
+LOESS smooths to detect non-linear dependencies.
+\item \strong{Influence & Stability:} Evaluated using standardized DFBETAs
+to identify highly influential observations.
+\item \strong{Collinearity:} Evaluated using the Generalized Variance
+Inflation Factor (GVIF) to correctly handle categorical covariates.
+\item \strong{Event Sufficiency (EPV):} Calculates the Events-Per-Variable
+ratio to warn against model overfitting.
+}
+
+\strong{Assumption Classification Framework}
+
+Crucially, statistical models cannot verify their own causal structure.
+\code{survAudit} explicitly classifies assumptions into three tiers to encourage
+transparent reporting:
+\enumerate{
+\item \strong{Statistically Assessable}: Assumptions rigorously testable from
+data (e.g., Proportional Hazards, Linearity).
+\item \strong{Partially Assessable}: Assumptions informed by metrics but
+requiring clinical judgment (e.g., Missing Data mechanisms, Outlier Impact).
+\item \strong{Non-Identifiable}: Assumptions that cannot be verified
+statistically (e.g., Independent Censoring, No Unmeasured Confounding).
+}
+Users are encouraged to use \code{\link{document_assumption}} to explicitly
+record qualitative justifications for non-identifiable assumptions on the audit object.
+}
 \examples{
 library(survival)
 fit <- coxph(Surv(time, status) ~ trt + celltype + karno + age,

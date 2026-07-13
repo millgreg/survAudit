@@ -37,16 +37,16 @@ The diagnostics in `survAudit` are statistical tests and heuristics. They have i
 You can install the development version of `survAudit` directly from GitHub using the `remotes` package:
 
 ```R
-# Install from GitHub
+# Install from GitHub (building vignettes is recommended)
 if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
-remotes::install_github("millgreg/survAudit")
+remotes::install_github("millgreg/survAudit", build_vignettes = TRUE)
 ```
 
 Alternatively, if you have the source archive downloaded, you can install it manually:
 
 ```R
-# Install the built source archive locally
-install.packages("survAudit_1.1.0.tar.gz", repos = NULL, type = "source")
+# Install the built source archive locally (filename depends on the release tag)
+install.packages("survAudit-1.1.0.tar.gz", repos = NULL, type = "source")
 ```
 
 ---
@@ -85,19 +85,28 @@ For a comprehensive walkthrough of interpreting these outputs, please read the [
 
 ### Documenting Qualitative Justifications
 
-Check off outstanding non-identifiable assumptions by writing qualitative justifications directly into the audit object:
+Check off outstanding non-identifiable assumptions by writing qualitative justifications directly into the audit object using the `document_assumption()` helper:
 
 ```R
 # Document independent censoring
-audit$assumptions$non_identifiable$independent_censoring$justification <- 
-  "Censoring is administrative (end of study period) and patient drop-out is unrelated to disease severity."
+audit <- document_assumption(
+  audit,
+  assumption = "independent_censoring",
+  justification = "Censoring is administrative (end of study period) and patient drop-out is unrelated to disease severity."
+)
 
 # Document unmeasured confounding
-audit$assumptions$non_identifiable$unmeasured_confounding$justification <- 
-  "Baseline clinical confounders (performance score, age, celltype) were controlled."
+audit <- document_assumption(
+  audit,
+  assumption = "unmeasured_confounding",
+  justification = "Baseline clinical confounders (performance score, age, celltype) were controlled."
+)
 
 # Print audit to see the checked results [x]
 print(audit)
+
+# Check detailed summary to see the written justifications
+summary(audit)
 
 # Save the audit trail
 saveRDS(audit, "cox_model_audit.rds")

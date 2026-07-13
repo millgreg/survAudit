@@ -147,6 +147,13 @@ print.summary.survAudit <- function(x, ...) {
     for (item in x$assumptions$non_identifiable) {
       label <- if (!is.null(item$label)) item$label else item$name
       cat("    - ", label, "\n", sep = "")
+      if (!is.null(item$justification)) {
+        # Wrap long justifications
+        just_text <- strwrap(paste("Justification:", item$justification), width = 75, indent = 6, exdent = 6)
+        cat(paste(just_text, collapse = "\n"), "\n")
+      } else {
+        cat("      Justification: [Not provided - use document_assumption()]\n")
+      }
     }
   } else {
     cat("    - Independent censoring\n")
