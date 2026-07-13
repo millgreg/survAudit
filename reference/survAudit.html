@@ -134,6 +134,34 @@ censoring, time distribution, ties, missing data).</p></dd>
 
 
 </dl></div>
+    <div id="details">
+    <h2>Details</h2>
+    <p><strong>Methodology</strong></p>
+<p><code>survAudit</code> executes a battery of statistical and diagnostic checks
+against a fitted Cox model, aggregating the results into a unified framework.
+The audit focuses on the fundamental assumptions of Cox regression:</p><ul><li><p><strong>Proportional Hazards:</strong> Evaluated via Schoenfeld residuals and
+the <code>cox.zph</code> test.</p></li>
+<li><p><strong>Functional Form:</strong> Evaluated by extracting martingale residuals
+from reduced null models (excluding the covariate of interest) and fitting
+LOESS smooths to detect non-linear dependencies.</p></li>
+<li><p><strong>Influence &amp; Stability:</strong> Evaluated using standardized DFBETAs
+to identify highly influential observations.</p></li>
+<li><p><strong>Collinearity:</strong> Evaluated using the Generalized Variance
+Inflation Factor (GVIF) to correctly handle categorical covariates.</p></li>
+<li><p><strong>Event Sufficiency (EPV):</strong> Calculates the Events-Per-Variable
+ratio to warn against model overfitting.</p></li>
+</ul><p><strong>Assumption Classification Framework</strong></p>
+<p>Crucially, statistical models cannot verify their own causal structure.
+<code>survAudit</code> explicitly classifies assumptions into three tiers to encourage
+transparent reporting:</p><ol><li><p><strong>Statistically Assessable</strong>: Assumptions rigorously testable from
+data (e.g., Proportional Hazards, Linearity).</p></li>
+<li><p><strong>Partially Assessable</strong>: Assumptions informed by metrics but
+requiring clinical judgment (e.g., Missing Data mechanisms, Outlier Impact).</p></li>
+<li><p><strong>Non-Identifiable</strong>: Assumptions that cannot be verified
+statistically (e.g., Independent Censoring, No Unmeasured Confounding).</p></li>
+</ol><p>Users are encouraged to use <code><a href="document_assumption.html">document_assumption</a></code> to explicitly
+record qualitative justifications for non-identifiable assumptions on the audit object.</p>
+    </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
@@ -193,7 +221,7 @@ censoring, time distribution, ties, missing data).</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>

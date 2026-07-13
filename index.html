@@ -129,13 +129,13 @@
 </h2>
 <p>You can install the development version of <code>survAudit</code> directly from GitHub using the <code>remotes</code> package:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install from GitHub</span></span>
+<code class="sourceCode R"><span><span class="co"># Install from GitHub (building vignettes is recommended)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"remotes"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"millgreg/survAudit"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"millgreg/survAudit"</span>, build_vignettes <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>Alternatively, if you have the source archive downloaded, you can install it manually:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install the built source archive locally</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"survAudit_1.1.0.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># Install the built source archive locally (filename depends on the release tag)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"survAudit-1.1.0.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -171,18 +171,27 @@
 <div class="section level3">
 <h3 id="documenting-qualitative-justifications">Documenting Qualitative Justifications<a class="anchor" aria-label="anchor" href="#documenting-qualitative-justifications"></a>
 </h3>
-<p>Check off outstanding non-identifiable assumptions by writing qualitative justifications directly into the audit object:</p>
+<p>Check off outstanding non-identifiable assumptions by writing qualitative justifications directly into the audit object using the <code><a href="reference/document_assumption.html">document_assumption()</a></code> helper:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Document independent censoring</span></span>
-<span><span class="va">audit</span><span class="op">$</span><span class="va">assumptions</span><span class="op">$</span><span class="va">non_identifiable</span><span class="op">$</span><span class="va">independent_censoring</span><span class="op">$</span><span class="va">justification</span> <span class="op">&lt;-</span> </span>
-<span>  <span class="st">"Censoring is administrative (end of study period) and patient drop-out is unrelated to disease severity."</span></span>
+<span><span class="va">audit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/document_assumption.html">document_assumption</a></span><span class="op">(</span></span>
+<span>  <span class="va">audit</span>,</span>
+<span>  assumption <span class="op">=</span> <span class="st">"independent_censoring"</span>,</span>
+<span>  justification <span class="op">=</span> <span class="st">"Censoring is administrative (end of study period) and patient drop-out is unrelated to disease severity."</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Document unmeasured confounding</span></span>
-<span><span class="va">audit</span><span class="op">$</span><span class="va">assumptions</span><span class="op">$</span><span class="va">non_identifiable</span><span class="op">$</span><span class="va">unmeasured_confounding</span><span class="op">$</span><span class="va">justification</span> <span class="op">&lt;-</span> </span>
-<span>  <span class="st">"Baseline clinical confounders (performance score, age, celltype) were controlled."</span></span>
+<span><span class="va">audit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/document_assumption.html">document_assumption</a></span><span class="op">(</span></span>
+<span>  <span class="va">audit</span>,</span>
+<span>  assumption <span class="op">=</span> <span class="st">"unmeasured_confounding"</span>,</span>
+<span>  justification <span class="op">=</span> <span class="st">"Baseline clinical confounders (performance score, age, celltype) were controlled."</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Print audit to see the checked results [x]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">audit</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Check detailed summary to see the written justifications</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">audit</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Save the audit trail</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">audit</span>, <span class="st">"cox_model_audit.rds"</span><span class="op">)</span></span></code></pre></div>
@@ -252,7 +261,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer>
