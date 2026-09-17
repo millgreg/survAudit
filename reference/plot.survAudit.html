@@ -65,6 +65,7 @@ influence diagnostics, outlier assessment, and global goodness-of-fit.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
 <span>  which <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ph"</span>, <span class="st">"functional"</span>, <span class="st">"influence"</span>, <span class="st">"outliers"</span>, <span class="st">"gof"</span><span class="op">)</span>,</span>
+<span>  vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ask <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -83,6 +84,13 @@ influence diagnostics, outlier assessment, and global goodness-of-fit.</p>
 Valid values are <code>"ph"</code>, <code>"functional"</code>,
 <code>"influence"</code>, <code>"outliers"</code>, and <code>"gof"</code>.
 Defaults to all five.</p></dd>
+
+
+<dt id="arg-vars">vars<a class="anchor" aria-label="anchor" href="#arg-vars"></a></dt>
+<dd><p>Optional character or integer vector specifying which covariates to
+include in covariate-specific plots (<code>"ph"</code>, <code>"functional"</code>, and
+<code>"influence"</code>). If <code>NULL</code> (the default), all available covariates
+are included.</p></dd>
 
 
 <dt id="arg-ask">ask<a class="anchor" aria-label="anchor" href="#arg-ask"></a></dt>
@@ -132,6 +140,8 @@ dashed 45-degree reference line.</p></li>
 <span class="r-in"><span><span class="va">audit</span> <span class="op">&lt;-</span> <span class="fu"><a href="survAudit.html">survAudit</a></span><span class="op">(</span><span class="va">fit</span>, data <span class="op">=</span> <span class="va">veteran</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit</span>, which <span class="op">=</span> <span class="st">"ph"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="plot.survAudit-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit</span>, which <span class="op">=</span> <span class="st">"functional"</span>, vars <span class="op">=</span> <span class="st">"age"</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="plot.survAudit-2.png" alt="" width="700" height="433"></span>
 </code></pre></div>
     </div>
   </div>

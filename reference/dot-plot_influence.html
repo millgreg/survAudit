@@ -57,7 +57,15 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">.plot_influence</span><span class="op">(</span><span class="va">inf</span>, <span class="va">col_point</span>, <span class="va">col_smooth</span>, <span class="va">col_ref</span>, <span class="va">col_thresh</span>, <span class="va">alpha_pt</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">.plot_influence</span><span class="op">(</span></span>
+<span>  <span class="va">inf</span>,</span>
+<span>  <span class="va">col_point</span>,</span>
+<span>  <span class="va">col_smooth</span>,</span>
+<span>  <span class="va">col_ref</span>,</span>
+<span>  <span class="va">col_thresh</span>,</span>
+<span>  <span class="va">alpha_pt</span>,</span>
+<span>  vars <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -86,6 +94,10 @@
 
 <dt id="arg-alpha-pt">alpha_pt<a class="anchor" aria-label="anchor" href="#arg-alpha-pt"></a></dt>
 <dd><p>Point alpha.</p></dd>
+
+
+<dt id="arg-vars">vars<a class="anchor" aria-label="anchor" href="#arg-vars"></a></dt>
+<dd><p>Optional character or integer vector of covariates to plot.</p></dd>
 
 </dl></div>
     <div id="value">
