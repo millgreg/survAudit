@@ -12,19 +12,23 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.width = 7,
-  fig.height = 5,
+  fig.height = 5.5,
   fig.align = "center",
+  dpi = 300,
+  out.width = "100%",
   warning = FALSE
 )
 ```
 
 `survAudit` provides a structured diagnostic workflow for Cox proportional hazards models. It integrates proportional hazards testing, functional form assessment, influence and outlier diagnostics, collinearity checks, and event sufficiency into a single S3 object.
 
-Assumptions are classified by how far they can be evaluated from the data:
+In routine practice, model diagnostics often either rely exclusively on p-values or ignore unverifiable assumptions altogether. A central design principle of `survAudit` is that model assumptions differ fundamentally in how far they can be evaluated from observed data alone:
 
-- **Non-Identifiable**: Cannot be tested statistically (e.g., independent censoring). Require design-based justification.
-- **Partially Assessable**: Informed by data but require analyst judgment (e.g., functional form, influence).
-- **Statistically Assessable**: Evaluable via formal tests (e.g., proportional hazards, collinearity).
+- **Non-Identifiable**: Assumptions that cannot be verified statistically from data alone (e.g., independent censoring, absence of unmeasured confounding). These require substantive domain knowledge and study-design arguments.
+- **Partially Assessable**: Assumptions informed by residual metrics but requiring visual inspection and analyst judgment (e.g., functional form, outlier impact).
+- **Statistically Assessable**: Assumptions testable via formal statistical hypotheses (e.g., proportional hazards, collinearity, event sufficiency).
+
+This tri-partite classification directly structures the audit outputs and reporting workflow illustrated below. The underlying residual diagnostics implement established methodology from the survival literature (Therneau & Grambsch, 2000; Klein & Moeschberger, 2003). The primary focus of `survAudit` is diagnostic detection and transparent documentation. While this vignette illustrates an initial respecification cycle, comprehensive discussions of remedial modeling strategies (such as splines, stratification, or time-varying coefficients) can be found in the broader survival analysis literature.
 
 ---
 
@@ -47,7 +51,7 @@ fit <- coxph(
 summary(fit)
 ```
 
-The model shows strong overall fit (Concordance = 0.813) and four highly significant predictors. Standard Cox output contains no information about whether model assumptions are met, it is entirely focused on estimation.
+The model shows strong discrimination (Concordance = 0.813) and four predictors with $p < 0.001$. Standard Cox output contains no information about whether model assumptions are met, it is entirely focused on estimation.
 
 ### 2. Run the Audit
 
@@ -66,34 +70,26 @@ The compact print output provides a quick orientation. The `[ ]` checkboxes for 
 summary(audit1)
 ```
 
-The detailed report adds the full Schoenfeld test table (with per-covariate chi-squared values), the five most influential observations by max |DFBETAs|, and the five largest deviance residuals — all with the original row identifiers from `pbc`.
+The detailed report adds the full Schoenfeld test table (with per-covariate chi-squared values), the five most influential observations by max |DFBETAs|, and the five largest deviance residuals, all with the original row identifiers from `pbc`. (Note: If you only need specific diagnostics programmatically without running the full report, each component is directly accessible, e.g., `audit1$ph$table` or `audit1$vif`; see [Accessing the Underlying Data](#accessing-the-underlying-data) below.)
 
 Working through the output section by section:
 
 - **Data context**: `protime` has 2 missing values, so the model is fitted on 416 of 418 observations. Ten event times are tied (6.2%), which is acceptable for the Efron approximation.
 - **Non-identifiable assumptions**: Both independent censoring and absence of unmeasured confounding appear as unfilled checkboxes. They require explicit justification from study design; the package cannot evaluate them.
 - **Goodness-of-fit**: Only signals that the Cox-Snell residuals were computed; the visual assessment is deferred to `plot(audit, which = "gof")`.
-- **Functional form**: Four continuous variables are assessed (`age`, `bili`, `albumin`, `protime`). No numeric summary is produced here — functional form is inherently visual.
+- **Functional form / Linearity**: Assesses whether continuous covariates have a linear relationship with the log hazard. Because there is no omnibus statistical test for non-linearity in Cox models, `survAudit` does not compute a p-value here. Instead, it lists the continuous predictors (`age`, `bili`, `albumin`, `protime`) for visual inspection via `plot(audit, which = "functional")`.
 - **Influence**: 69 observations exceed the $2/\sqrt{n} = 0.098$ threshold. Observation 325 has the largest maximum |DFBETAs| of 0.96, which is sizeable relative to the threshold, indicating high sensitivity of at least one coefficient to this case.
 - **Outliers**: 19 observations have |deviance| > 1.96 and 9 have |log-odds| > 3.66. The largest deviance residual is 3.24 (observation 319), suggesting this patient experienced the event substantially earlier than the model predicted.
-- **Proportional hazards**: The global test is strongly significant (p = 0.001). `protime` (p = 0.003) and `bili` (p = 0.005) are individually flagged. `age`, `albumin`, and `edema` show no evidence of time-varying effects.
+- **Proportional hazards**: Evaluated using Schoenfeld residuals under the null hypothesis of constant hazard ratios over time ($H_0: \beta(t) = \beta$). A statistically significant test ($p < 0.05$) indicates an assumption violation. Importantly, a non-significant test does not rule out non-proportionality, as the test has limited power against non-monotone patterns or in smaller samples. Here, the global test is statistically significant ($p = 0.001$), with `protime` ($p = 0.003$) and `bili` ($p = 0.005$) individually flagged.
 
-  Two limitations of this test are worth keeping in mind: (1) it detects only linear trends in the Schoenfeld residuals over time and can miss non-monotone violations; and (2) like any chi-squared test, it becomes increasingly sensitive to minor deviations as sample size grows. Visual inspection of the residual plots is therefore essential for assessing whether a statistically flagged violation is substantively meaningful.
+  Two limitations of the proportional hazards test are worth keeping in mind: (1) it detects only linear trends in the Schoenfeld residuals over time and can miss non-monotone violations; and (2) like any chi-squared test, it becomes increasingly sensitive to minor deviations as sample size grows. Visual inspection of the residual plots is therefore essential for assessing whether a statistically flagged violation is substantively meaningful.
 - **EPV**: 160 events across 6 parameters gives an EPV of 26.7, which is adequate (threshold ≥ 20).
 - **Collinearity**: All VIFs are near 1, indicating no meaningful collinearity.
 
-The most pressing issues are the proportional hazards violations and the functional form, which must be assessed visually before deciding how to address them.
+The primary statistical issue is the proportional hazards violation, while the linearity of continuous predictors must be evaluated visually before deciding on model respecification.
 
 
 ### 3. Visual Diagnostics
-
-#### Goodness of Fit
-
-```{r plot-gof-initial}
-plot(audit1, which = "gof")
-```
-
-The Cox-Snell residuals, if the model is correctly specified, should follow a unit exponential distribution. In the cumulative hazard plot, a well-fitting model will track the 45-degree reference line closely. Here the curve follows the diagonal through most of the range, indicating acceptable macro-level calibration. A modest deviation in the upper tail is common and typically reflects data sparsity at long follow-up times rather than systematic misfit. Goodness-of-fit is assessed globally, i.e. the model can pass this check and still have local violations (e.g., non-linearity in one covariate).
 
 #### Functional Form
 
@@ -101,9 +97,11 @@ The Cox-Snell residuals, if the model is correctly specified, should follow a un
 plot(audit1, which = "functional")
 ```
 
+For models with many continuous covariates, `plot()` arranges the panels into a multi-row grid. You can also inspect specific covariates individually using the `vars` argument (e.g., `plot(audit1, which = "functional", vars = "bili")` or `vars = c("bili", "protime")`).
+
 For each continuous covariate, a restricted Cox model is fitted that omits that covariate. The martingale residuals from that restricted model are then plotted against the covariate values. Because the restricted model omits the covariate, its residuals will pick up the covariate's effect on the outcome. If the relationship is correctly specified as linear, the LOESS smooth should trace an approximately straight line. A curved or non-monotone smooth indicates that the linear specification is inadequate and that a transformation or more flexible term may be needed.
 
-For `bili`, the smooth rises sharply at low values and flattens at high values, tracing a logarithmic curve — consistent with a log-transformation. For `protime`, the smooth is approximately flat at low values before rising sharply and then dropping, again suggesting a non-linear relationship. These patterns are not apparent from the coefficient table, which assumes linearity by construction.
+For `bili`, the smooth rises sharply at low values and flattens at high values, tracing a logarithmic curve consistent with a log-transformation. For `protime`, the smooth is approximately flat at low values before rising sharply and then dropping, again suggesting a non-linear relationship. In contrast, `age` and `albumin` track the linear reference lines closely, with the linear fit remaining well within the LOESS confidence bands throughout their range.
 
 Common remedies for non-linearity include log-transforming the covariate, using polynomial or spline terms, or categorising the variable if a meaningful clinical threshold exists.
 
@@ -117,7 +115,15 @@ The proportional hazards assumption requires that the log hazard ratio for each 
 
 The formal test (`cox.zph`) detects linear trends in the residuals over time. It will miss violations where the effect first increases and then decreases, or other non-monotone patterns. It is also sensitive to sample size: with several hundred observations, even a small and clinically irrelevant drift can yield a significant p-value. The plot is therefore the primary diagnostic; the p-value is supporting evidence.
 
-For `bili` (p = 0.005) and `protime` (p = 0.003), the smoothed residual plots show clear trends over time. For `protime`, the hazard ratio appears to decrease over follow-up, meaning its prognostic effect is stronger early in follow-up than later. This is a substantively important finding: a single time-averaged hazard ratio obscures this time-varying behaviour. The remaining covariates show no systematic trend.
+For `bili` (p = 0.005) and `protime` (p = 0.003), the smoothed residual plots show clear trends over time. For `protime`, the hazard ratio appears to decrease over follow-up, meaning its prognostic effect is stronger early in follow-up than later. This is an important finding: a single time-averaged hazard ratio obscures this time-varying behaviour. For the remaining covariates, the smoothed curves remain roughly horizontal and easily encompass the reference line within their confidence bands.
+
+#### Goodness of Fit
+
+```{r plot-gof-initial}
+plot(audit1, which = "gof")
+```
+
+The Cox-Snell residuals, if the model is correctly specified, should follow a unit exponential distribution. In the cumulative hazard plot, a well-fitting model will track the 45-degree reference line closely. Here the curve follows the diagonal through most of the range, indicating acceptable macro-level calibration. A modest deviation in the upper tail is common and typically reflects data sparsity at long follow-up times rather than systematic misfit. Crucially, goodness-of-fit is an omnibus, macro-level assessment. Even though the curve tracks the diagonal reasonably well overall, this global check is blind to the local non-linearities and proportional hazards violations identified above. An analyst who relies solely on global calibration would be falsely reassured. We therefore proceed to Section 4 to respecify the model.
 
 
 ### 4. Model Respecification
@@ -158,9 +164,9 @@ The PH assumption is now satisfied for `log(bili)` (p = 0.306): the time-varying
 plot(audit2, which = "influence")
 ```
 
-DFBETAs quantify, for each observation and each coefficient, how much that coefficient estimate changes when the observation is removed. Large values indicate that the estimate is sensitive to a specific case. Values exceeding the $2/\sqrt{n}$ threshold are flagged. The summary table reports the highest |DFBETAs|. The full matrix is accessible via `audit2$influence$dfbetas`. Here observations 325 and 293 have the largest maximum values.
+DFBETAs quantify how much each coefficient changes when an individual observation is removed. Values exceeding the size-adjusted $2/\sqrt{n}$ threshold are flagged. Because this cutoff shrinks with sample size, it naturally flags many observations in larger datasets and serves as a relative screen. Rather than inspecting every flagged point, analysts should focus on the extreme upper tail reported in the `summary()` table, where observations 325 and 293 show the largest values (full matrix in `audit2$influence$dfbetas`).
 
-A high DFBETAs value is not by itself a reason to exclude the observation. The appropriate response is to examine those cases individually: check for data entry errors, assess whether they represent a clinically distinct subgroup, and consider whether the estimates change substantively if they are excluded (sensitivity analysis).
+A high DFBETAs value is not by itself a reason to exclude a case. The appropriate response is to inspect extreme cases for data entry errors, assess whether they represent a distinct subgroup, and evaluate their impact through sensitivity analysis.
 
 #### Outliers
 
@@ -168,9 +174,9 @@ A high DFBETAs value is not by itself a reason to exclude the observation. The a
 plot(audit2, which = "outliers")
 ```
 
-Outlier residuals measure how poorly the model predicts for each individual, independent of their effect on the coefficients. Deviance residuals greater than $\pm 1.96$ and log-odds residuals greater than $\pm 3.66$ are flagged. Observations with large positive deviance residuals experienced the event much sooner than the model predicted, while large negative residuals indicate the event occurred later than expected or not at all despite high predicted risk.
+Unlike influence diagnostics, which assess effects on model coefficients, outlier residuals identify individuals with unusual survival times given their covariate profile. Deviance residuals exceeding $\pm 1.96$ and log-odds residuals exceeding $\pm 3.66$ are flagged. Because roughly 5% of observations exceed $\pm 1.96$ by chance alone, a moderate number of flagged cases is expected in larger datasets. Attention should focus on extreme cases reported in the `summary()` table, such as observations 87 and 319 with deviance residuals above 3, where patients died substantially earlier than their prognosis suggested (full residuals in `audit2$outliers`).
 
-Several observations show deviance residuals above 3, indicating the model substantially under-predicts their risk. As with influence, these cases should be examined individually as they may reflect genuinely unusual clinical trajectories, unrecorded events, or data quality issues.
+As with influence, extreme cases should be examined individually to check for data quality issues, unrecorded events, or genuinely unusual clinical trajectories.
 
 ---
 
@@ -191,17 +197,31 @@ audit2$influence$flagged_obs
 
 ## Documenting Non-Identifiable Assumptions
 
-For assumptions that cannot be tested statistically, `survAudit` provides a slot to record design-based justification directly in the object:
+For assumptions that cannot be tested statistically, `survAudit` provides the `document_assumption()` helper to record qualitative justifications directly on the audit object:
 
 ```{r justify}
-audit2$assumptions$non_identifiable$independent_censoring$justification <-
-  "Censoring was purely administrative (end-of-study cutoff). No competing events or loss to follow-up related to prognosis."
+audit2 <- document_assumption(
+  audit2,
+  assumption = "independent_censoring",
+  justification = "Censoring was purely administrative (end-of-study cutoff). No competing events or loss to follow-up related to prognosis."
+)
+
+# The recorded text is stored directly within the audit object:
+audit2$assumptions$non_identifiable$independent_censoring$justification
 ```
 
-This attaches the justification to the audit object, making it available alongside the quantitative diagnostics when the object is saved or reported.
+This attaches the justification to the audit object. In the compact `print()` output, the corresponding checkbox is marked as completed (`[x] Independent censoring`), and `summary()` displays the full justification text beneath the assumption header.
 
 ---
 
 ## Summary
 
 The respecified model resolved the functional form and PH issues for bilirubin, but `log(protime)` remains problematic on both counts. Several highly influential observations persist across both model specifications. In practice, the analyst would continue iterating by investigating the flagged cases, exploring alternative specifications for prothrombin time (e.g., stratification or splines), and re-auditing after each change until the remaining diagnostics are either resolved or explicitly justified.
+
+---
+
+## References
+
+- Klein, J. P., & Moeschberger, M. L. (2003). *Survival Analysis: Techniques for Censored and Truncated Data* (2nd ed.). Springer.
+- Therneau, T. M., & Grambsch, P. M. (2000). *Modeling Survival Data: Extending the Cox Model*. Springer.
+- Xue, Y., & Schifano, E. D. (2017). Diagnostics for the Cox model. *Communications for Statistical Applications and Methods*, 24(6), 583–604.

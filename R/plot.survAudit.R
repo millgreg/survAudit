@@ -34,6 +34,10 @@
 #'   Valid values are \code{"ph"}, \code{"functional"},
 #'   \code{"influence"}, \code{"outliers"}, and \code{"gof"}.
 #'   Defaults to all five.
+#' @param vars Optional character or integer vector specifying which covariates to
+#'   include in covariate-specific plots (\code{"ph"}, \code{"functional"}, and
+#'   \code{"influence"}). If \code{NULL} (the default), all available covariates
+#'   are included.
 #' @param ask Logical. If \code{TRUE} (the default in interactive
 #'   sessions), the user is prompted between plots.
 #' @param ... Additional arguments (currently ignored).
@@ -50,9 +54,11 @@
 #'              data = veteran)
 #' audit <- survAudit(fit, data = veteran)
 #' plot(audit, which = "ph")
+#' plot(audit, which = "functional", vars = "age")
 plot.survAudit <- function(x,
                            which = c("ph", "functional",
                                      "influence", "outliers", "gof"),
+                           vars = NULL,
                            ask = interactive(),
                            ...) {
 
@@ -74,8 +80,9 @@ plot.survAudit <- function(x,
     if (is.null(x$ph) || is.null(x$ph$zph)) {
       message("PH diagnostics not available; skipping 'ph' plot.")
     } else {
-      plots[["ph"]] <- .plot_ph(x$ph, col_point, col_smooth,
-                                col_ref, alpha_pt)
+      p_ph <- .plot_ph(x$ph, col_point, col_smooth,
+                       col_ref, alpha_pt, vars = vars)
+      if (!is.null(p_ph)) plots[["ph"]] <- p_ph
     }
   }
 
@@ -86,9 +93,10 @@ plot.survAudit <- function(x,
       message("Functional form diagnostics not available; ",
               "skipping 'functional' plot.")
     } else {
-      plots[["functional"]] <- .plot_functional(
-        x$functional_form, col_point, col_smooth, col_ref, alpha_pt
+      p_ff <- .plot_functional(
+        x$functional_form, col_point, col_smooth, col_ref, alpha_pt, vars = vars
       )
+      if (!is.null(p_ff)) plots[["functional"]] <- p_ff
     }
   }
 
@@ -98,9 +106,10 @@ plot.survAudit <- function(x,
       message("Influence diagnostics not available; ",
               "skipping 'influence' plot.")
     } else {
-      plots[["influence"]] <- .plot_influence(
-        x$influence, col_point, col_smooth, col_ref, col_thresh, alpha_pt
+      p_inf <- .plot_influence(
+        x$influence, col_point, col_smooth, col_ref, col_thresh, alpha_pt, vars = vars
       )
+      if (!is.null(p_inf)) plots[["influence"]] <- p_inf
     }
   }
 
@@ -161,9 +170,10 @@ plot.survAudit <- function(x,
 #' @param col_smooth Smooth line colour.
 #' @param col_ref Reference line colour.
 #' @param alpha_pt Point alpha.
+#' @param vars Optional character or integer vector of covariates to plot.
 #' @return A \code{ggplot} object.
 #' @keywords internal
-.plot_ph <- function(ph, col_point, col_smooth, col_ref, alpha_pt) {
+.plot_ph <- function(ph, col_point, col_smooth, col_ref, alpha_pt, vars = NULL) {
 
   zph <- ph$zph
 
@@ -184,9 +194,23 @@ plot.survAudit <- function(x,
     if (is.null(colnames(y_mat))) colnames(y_mat) <- "covariate"
   }
   
+  var_names <- colnames(y_mat)
+
+  if (!is.null(vars)) {
+    if (is.numeric(vars)) {
+      vars <- var_names[vars[!is.na(vars) & vars >= 1 & vars <= length(var_names)]]
+    }
+    matched_vars <- intersect(var_names, vars)
+    if (length(matched_vars) == 0L) {
+      warning("None of the requested covariates in 'vars' were found for the PH plot.", call. = FALSE)
+      return(NULL)
+    }
+    var_names <- matched_vars
+    y_mat <- y_mat[, var_names, drop = FALSE]
+  }
+
   n_t <- length(time_vals)
   n_vars <- ncol(y_mat)
-  var_names <- colnames(y_mat)
 
   df <- data.frame(
     time     = rep(time_vals, times = n_vars),
@@ -253,12 +277,26 @@ plot.survAudit <- function(x,
 #' @param col_smooth Smooth line colour.
 #' @param col_ref Reference line colour.
 #' @param alpha_pt Point alpha.
+#' @param vars Optional character or integer vector of covariates to plot.
 #' @return A \code{ggplot} object.
 #' @keywords internal
 .plot_functional <- function(ff, col_point, col_smooth,
-                             col_ref, alpha_pt) {
+                             col_ref, alpha_pt, vars = NULL) {
 
-  dfs <- lapply(names(ff$results), function(vname) {
+  target_vars <- names(ff$results)
+  if (!is.null(vars)) {
+    if (is.numeric(vars)) {
+      vars <- target_vars[vars[!is.na(vars) & vars >= 1 & vars <= length(target_vars)]]
+    }
+    matched_vars <- intersect(target_vars, vars)
+    if (length(matched_vars) == 0L) {
+      warning("None of the requested covariates in 'vars' were found for the functional form plot.", call. = FALSE)
+      return(NULL)
+    }
+    target_vars <- matched_vars
+  }
+
+  dfs <- lapply(target_vars, function(vname) {
     res <- ff$results[[vname]]
     data.frame(
       covariate_value = res$covariate_values,
@@ -320,17 +358,32 @@ plot.survAudit <- function(x,
 #' @param col_ref Reference line colour.
 #' @param col_thresh Threshold line colour.
 #' @param alpha_pt Point alpha.
+#' @param vars Optional character or integer vector of covariates to plot.
 #' @return A \code{ggplot} object.
 #' @keywords internal
 .plot_influence <- function(inf, col_point, col_smooth,
-                            col_ref, col_thresh, alpha_pt) {
+                            col_ref, col_thresh, alpha_pt, vars = NULL) {
 
   # DFBETAs in long format
   dfb <- inf$dfbetas
   n <- nrow(dfb)
-  p <- ncol(dfb)
   var_names <- colnames(dfb)
-  if (is.null(var_names)) var_names <- paste0("V", seq_len(p))
+  if (is.null(var_names)) var_names <- paste0("V", seq_len(ncol(dfb)))
+
+  if (!is.null(vars)) {
+    if (is.numeric(vars)) {
+      vars <- var_names[vars[!is.na(vars) & vars >= 1 & vars <= length(var_names)]]
+    }
+    matched_vars <- intersect(var_names, vars)
+    if (length(matched_vars) == 0L) {
+      warning("None of the requested covariates in 'vars' were found for the influence plot.", call. = FALSE)
+      return(NULL)
+    }
+    var_names <- matched_vars
+    dfb <- dfb[, var_names, drop = FALSE]
+  }
+
+  p <- ncol(dfb)
 
   df_dfb <- data.frame(
     obs      = rep(seq_len(n), times = p),

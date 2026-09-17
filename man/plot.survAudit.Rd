@@ -7,6 +7,7 @@
 \method{plot}{survAudit}(
   x,
   which = c("ph", "functional", "influence", "outliers", "gof"),
+  vars = NULL,
   ask = interactive(),
   ...
 )
@@ -18,6 +19,11 @@
 Valid values are \code{"ph"}, \code{"functional"},
 \code{"influence"}, \code{"outliers"}, and \code{"gof"}.
 Defaults to all five.}
+
+\item{vars}{Optional character or integer vector specifying which covariates to
+include in covariate-specific plots (\code{"ph"}, \code{"functional"}, and
+\code{"influence"}). If \code{NULL} (the default), all available covariates
+are included.}
 
 \item{ask}{Logical. If \code{TRUE} (the default in interactive
 sessions), the user is prompted between plots.}
@@ -65,4 +71,5 @@ fit <- coxph(Surv(time, status) ~ trt + celltype + karno + age,
              data = veteran)
 audit <- survAudit(fit, data = veteran)
 plot(audit, which = "ph")
+plot(audit, which = "functional", vars = "age")
 }

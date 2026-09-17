@@ -4,7 +4,7 @@
 \alias{.plot_functional}
 \title{Plot functional form diagnostics}
 \usage{
-.plot_functional(ff, col_point, col_smooth, col_ref, alpha_pt)
+.plot_functional(ff, col_point, col_smooth, col_ref, alpha_pt, vars = NULL)
 }
 \arguments{
 \item{ff}{Functional form diagnostics list.}
@@ -16,6 +16,8 @@
 \item{col_ref}{Reference line colour.}
 
 \item{alpha_pt}{Point alpha.}
+
+\item{vars}{Optional character or integer vector of covariates to plot.}
 }
 \value{
 A \code{ggplot} object.

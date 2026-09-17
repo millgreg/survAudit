@@ -4,7 +4,7 @@
 \alias{.plot_ph}
 \title{Plot PH diagnostics (Schoenfeld residuals)}
 \usage{
-.plot_ph(ph, col_point, col_smooth, col_ref, alpha_pt)
+.plot_ph(ph, col_point, col_smooth, col_ref, alpha_pt, vars = NULL)
 }
 \arguments{
 \item{ph}{PH diagnostics list from the survAudit object.}
@@ -16,6 +16,8 @@
 \item{col_ref}{Reference line colour.}
 
 \item{alpha_pt}{Point alpha.}
+
+\item{vars}{Optional character or integer vector of covariates to plot.}
 }
 \value{
 A \code{ggplot} object.

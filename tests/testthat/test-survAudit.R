@@ -243,3 +243,27 @@ test_that("Display methods degrade gracefully when components are missing", {
   expect_message(plot(audit_partial, which = "ph", ask = FALSE), "PH diagnostics not available")
   expect_message(plot(audit_partial, which = "influence", ask = FALSE), "Influence diagnostics not available")
 })
+
+# ── Test 20: plot() with vars argument ─────────────────────────────
+test_that("plot() supports vars argument for targeted covariate plotting", {
+  audit_test <- survAudit(fit, data = veteran)
+
+  # Functional form with single var
+  p_ff_single <- plot(audit_test, which = "functional", vars = "age", ask = FALSE)
+  expect_s3_class(p_ff_single, "ggplot")
+
+  # PH with subset of vars
+  p_ph_sub <- plot(audit_test, which = "ph", vars = c("age", "karno"), ask = FALSE)
+  expect_s3_class(p_ph_sub, "ggplot")
+
+  # Influence with subset of vars
+  p_inf_sub <- plot(audit_test, which = "influence", vars = "age", ask = FALSE)
+  expect_s3_class(p_inf_sub, "ggplot")
+
+  # Non-existent variable warns and handles gracefully
+  expect_warning(
+    plot(audit_test, which = "functional", vars = "nonexistent", ask = FALSE),
+    "None of the requested covariates"
+  )
+})
+

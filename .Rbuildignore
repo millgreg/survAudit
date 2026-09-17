@@ -9,3 +9,5 @@
 ^Rplots\.pdf$
 ^manuscript$
 ^validation_script\.R$
+^docs$
+^scratch$

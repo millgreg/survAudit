@@ -84,9 +84,10 @@ print.survAudit <- function(x, ...) {
   }
 
   # -- Functional Form --
-  cat("  Functional Form (visual assessment)\n")
+  cat("  Functional Form / Linearity of Continuous Predictors\n")
   if (!is.null(x$functional_form) &&
       length(x$functional_form$results) > 0L) {
+    cat("    Inspect visually via plot(..., which = \"functional\"):\n")
     cat("    ", paste(x$functional_form$continuous_vars, collapse = ", "), "\n", sep = "")
   } else {
     cat("    not available\n")
@@ -97,9 +98,10 @@ print.survAudit <- function(x, ...) {
   cat(.section_header("Statistically Assessable Assumptions"), "\n\n")
 
   # -- Proportional Hazards --
-  cat("  Proportional Hazards\n")
+  cat("  Proportional Hazards (H0: constant hazard ratio)\n")
   if (!is.null(x$ph)) {
-    cat("    Global test: p = ", .format_p(x$ph$global_p), "\n", sep = "")
+    viol_tag <- if (!is.na(x$ph$global_p) && x$ph$global_p < alpha) " (violation indicated)" else ""
+    cat("    Global test: p = ", .format_p(x$ph$global_p), viol_tag, "\n", sep = "")
 
     # Per-covariate results where p < alpha
     tbl <- x$ph$table
@@ -116,7 +118,7 @@ print.survAudit <- function(x, ...) {
       }
     }
     if (!found_any) {
-      cat("    No covariate-level violations detected (p >= ", alpha, ")\n", sep = "")
+      cat("    No covariates flagged (p >= ", alpha, ")\n", sep = "")
     }
   } else {
     cat("    not available\n")

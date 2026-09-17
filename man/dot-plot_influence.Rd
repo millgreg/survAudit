@@ -4,7 +4,15 @@
 \alias{.plot_influence}
 \title{Plot influence diagnostics}
 \usage{
-.plot_influence(inf, col_point, col_smooth, col_ref, col_thresh, alpha_pt)
+.plot_influence(
+  inf,
+  col_point,
+  col_smooth,
+  col_ref,
+  col_thresh,
+  alpha_pt,
+  vars = NULL
+)
 }
 \arguments{
 \item{inf}{Influence diagnostics list.}
@@ -18,6 +26,8 @@
 \item{col_thresh}{Threshold line colour.}
 
 \item{alpha_pt}{Point alpha.}
+
+\item{vars}{Optional character or integer vector of covariates to plot.}
 }
 \value{
 A \code{ggplot} object.
