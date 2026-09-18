@@ -22,13 +22,7 @@ knitr::opts_chunk$set(
 
 `survAudit` provides a structured diagnostic workflow for Cox proportional hazards models. It integrates proportional hazards testing, functional form assessment, influence and outlier diagnostics, collinearity checks, and event sufficiency into a single S3 object.
 
-In routine practice, model diagnostics often either rely exclusively on p-values or ignore unverifiable assumptions altogether. A central design principle of `survAudit` is that model assumptions differ fundamentally in how far they can be evaluated from observed data alone:
-
-- **Non-Identifiable**: Assumptions that cannot be verified statistically from data alone (e.g., independent censoring, absence of unmeasured confounding). These require substantive domain knowledge and study-design arguments.
-- **Partially Assessable**: Assumptions informed by residual metrics but requiring visual inspection and analyst judgment (e.g., functional form, outlier impact).
-- **Statistically Assessable**: Assumptions testable via formal statistical hypotheses (e.g., proportional hazards, collinearity, event sufficiency).
-
-This tri-partite classification directly structures the audit outputs and reporting workflow illustrated below. The underlying residual diagnostics implement established methodology from the survival literature (Therneau & Grambsch, 2000; Klein & Moeschberger, 2003). The primary focus of `survAudit` is diagnostic detection and transparent documentation. While this vignette illustrates an initial respecification cycle, comprehensive discussions of remedial modeling strategies (such as splines, stratification, or time-varying coefficients) can be found in the broader survival analysis literature.
+The primary focus of `survAudit` is diagnostic detection and transparent documentation. While this vignette illustrates an initial respecification cycle, comprehensive discussions of diagnostic theory, interpretation, and remedial modeling strategies (such as splines, stratification, or time-varying coefficients) can be found in the literature listed under [References and Further Reading](#references-and-further-reading).
 
 ---
 
@@ -55,7 +49,15 @@ The model shows strong discrimination (Concordance = 0.813) and four predictors 
 
 ### 2. Run the Audit
 
-Pass the fitted model and the original dataset to `survAudit()`. The `data` argument is required because partial models must be refitted when assessing functional form.
+In routine practice, model diagnostics often either rely exclusively on p-values or ignore unverifiable assumptions altogether. A central design principle of `survAudit` is that model assumptions differ fundamentally in how far they can be evaluated from observed data alone:
+
+- **Non-Identifiable**: Assumptions that cannot be verified statistically from data alone (e.g., independent censoring, absence of unmeasured confounding). These require substantive domain knowledge and study-design arguments.
+- **Partially Assessable**: Assumptions informed by residual metrics but requiring visual inspection and analyst judgment (e.g., functional form, outlier impact).
+- **Statistically Assessable**: Assumptions testable via formal statistical hypotheses (e.g., proportional hazards, collinearity, event sufficiency).
+
+This tri-partite classification is directly mirrored in the audit output so that empirical tests and qualitative justifications are clearly separated.
+
+To generate the audit, pass the fitted model and the original dataset to `survAudit()`. The `data` argument is required because partial models must be refitted when assessing functional form.
 
 ```{r audit}
 audit1 <- survAudit(fit, data = pbc)
@@ -72,18 +74,29 @@ summary(audit1)
 
 The detailed report adds the full Schoenfeld test table (with per-covariate chi-squared values), the five most influential observations by max |DFBETAs|, and the five largest deviance residuals, all with the original row identifiers from `pbc`. (Note: If you only need specific diagnostics programmatically without running the full report, each component is directly accessible, e.g., `audit1$ph$table` or `audit1$vif`; see [Accessing the Underlying Data](#accessing-the-underlying-data) below.)
 
-Working through the output section by section:
+Working through the summary output section by section:
 
-- **Data context**: `protime` has 2 missing values, so the model is fitted on 416 of 418 observations. Ten event times are tied (6.2%), which is acceptable for the Efron approximation.
-- **Non-identifiable assumptions**: Both independent censoring and absence of unmeasured confounding appear as unfilled checkboxes. They require explicit justification from study design; the package cannot evaluate them.
+**Data Context & Model Info**
+
+- `protime` has 2 missing values, so the model is fitted on 416 of 418 observations. Ten event times are tied (6.2%), which is acceptable for the Efron approximation.
+
+**1. Non-Identifiable Assumptions**
+
+- Both independent censoring and absence of unmeasured confounding appear as unfilled checkboxes. They require explicit justification from study design; the package cannot evaluate them.
+
+**2. Partially Assessable Diagnostics**
+
 - **Goodness-of-fit**: Only signals that the Cox-Snell residuals were computed; the visual assessment is deferred to `plot(audit, which = "gof")`.
 - **Functional form / Linearity**: Assesses whether continuous covariates have a linear relationship with the log hazard. Because there is no omnibus statistical test for non-linearity in Cox models, `survAudit` does not compute a p-value here. Instead, it lists the continuous predictors (`age`, `bili`, `albumin`, `protime`) for visual inspection via `plot(audit, which = "functional")`.
 - **Influence**: 69 observations exceed the $2/\sqrt{n} = 0.098$ threshold. Observation 325 has the largest maximum |DFBETAs| of 0.96, which is sizeable relative to the threshold, indicating high sensitivity of at least one coefficient to this case.
 - **Outliers**: 19 observations have |deviance| > 1.96 and 9 have |log-odds| > 3.66. The largest deviance residual is 3.24 (observation 319), suggesting this patient experienced the event substantially earlier than the model predicted.
+
+**3. Statistically Assessable Assumptions**
+
 - **Proportional hazards**: Evaluated using Schoenfeld residuals under the null hypothesis of constant hazard ratios over time ($H_0: \beta(t) = \beta$). A statistically significant test ($p < 0.05$) indicates an assumption violation. Importantly, a non-significant test does not rule out non-proportionality, as the test has limited power against non-monotone patterns or in smaller samples. Here, the global test is statistically significant ($p = 0.001$), with `protime` ($p = 0.003$) and `bili` ($p = 0.005$) individually flagged.
 
   Two limitations of the proportional hazards test are worth keeping in mind: (1) it detects only linear trends in the Schoenfeld residuals over time and can miss non-monotone violations; and (2) like any chi-squared test, it becomes increasingly sensitive to minor deviations as sample size grows. Visual inspection of the residual plots is therefore essential for assessing whether a statistically flagged violation is substantively meaningful.
-- **EPV**: 160 events across 6 parameters gives an EPV of 26.7, which is adequate (threshold ≥ 20).
+- **Event sufficiency (EPV)**: 160 events across 6 parameters gives an EPV of 26.7, which is adequate (threshold ≥ 20).
 - **Collinearity**: All VIFs are near 1, indicating no meaningful collinearity.
 
 The primary statistical issue is the proportional hazards violation, while the linearity of continuous predictors must be evaluated visually before deciding on model respecification.
@@ -97,7 +110,7 @@ The primary statistical issue is the proportional hazards violation, while the l
 plot(audit1, which = "functional")
 ```
 
-For models with many continuous covariates, `plot()` arranges the panels into a multi-row grid. You can also inspect specific covariates individually using the `vars` argument (e.g., `plot(audit1, which = "functional", vars = "bili")` or `vars = c("bili", "protime")`).
+For models with many continuous covariates, `plot()` arranges the panels into a multi-row grid. You can also inspect specific covariates individually using the `vars` argument (e.g., `plot(audit1, which = "functional", vars = "bili")`).
 
 For each continuous covariate, a restricted Cox model is fitted that omits that covariate. The martingale residuals from that restricted model are then plotted against the covariate values. Because the restricted model omits the covariate, its residuals will pick up the covariate's effect on the outcome. If the relationship is correctly specified as linear, the LOESS smooth should trace an approximately straight line. A curved or non-monotone smooth indicates that the linear specification is inadequate and that a transformation or more flexible term may be needed.
 
@@ -182,16 +195,29 @@ As with influence, extreme cases should be examined individually to check for da
 
 ## Accessing the Underlying Data
 
-All diagnostic results are stored in the returned S3 object and can be extracted directly. This is useful for custom reporting, sensitivity analyses, or integration into automated pipelines:
+The `survAudit` object is a named list organized modularly by diagnostic domain. Each slot stores the complete underlying numerical data (residual matrices, test statistics, coordinates, and observation identifiers), making it straightforward to extract diagnostics for custom tables, plots, or sensitivity analyses:
+
+| Domain | Slot | Key Elements |
+|:-----------------------------|:------------------------|:--------------------------------------------|
+| **Data Context** | `audit$data_context` | `$n`, `$n_events`, `$n_censored`, `$censoring_rate`, `$time_range`, `$time_median`, `$time_iqr`, `$n_ties`, `$tie_fraction`, `$missing_data`, `$counting_process` |
+| **Model Info** | `audit$model_info` | `$call`, `$formula`, `$coefficients`, `$n_coef`, `$method`, `$converged` |
+| **Proportional Hazards** | `audit$ph` | `$table`, `$global_p`, `$raw_residuals`, `$raw_time`, `$transform`, `$zph` |
+| **Functional Form** | `audit$functional_form` | `$results[[var]]$residuals`, `$results[[var]]$covariate_values`, `$results[[var]]$loess_fit` |
+| **Collinearity** | `audit$vif` | `$vif`, `$flagged`, `$message` |
+| **Event Sufficiency** | `audit$epv` | `$n_events`, `$n_parameters`, `$ratio`, `$classification` |
+| **Influence** | `audit$influence` | `$dfbeta`, `$dfbetas`, `$max_dfbetas`, `$threshold`, `$flagged_obs` |
+| **Outliers** | `audit$outliers` | `$martingale`, `$deviance`, `$log_odds`, `$normal_deviate`, `$linear_predictor`, `$flagged` |
+| **Goodness-of-Fit** | `audit$gof` | `$coxsnell`, `$plot_x`, `$plot_y` |
+| **Assumptions** | `audit$assumptions` | `$non_identifiable`, `$partially_assessable`, `$assessable` |
 
 ```{r extract}
-# The full cox.zph table
+# Extract the full Schoenfeld test table
 audit2$ph$table
 
-# Martingale residuals from the full model
-head(audit2$outliers$martingale)
+# Extract the DFBETAs matrix for specific inspection
+head(audit2$influence$dfbetas[, c("log(bili)", "log(protime)")])
 
-# Flagged influential observations
+# Observation row names flagged for high influence
 audit2$influence$flagged_obs
 ```
 
@@ -220,8 +246,12 @@ The respecified model resolved the functional form and PH issues for bilirubin, 
 
 ---
 
-## References
+## References and Further Reading
 
+- Collett, D. (2015). *Modelling Survival Data in Medical Research* (3rd ed.). CRC Press.
+- Harrell, F. E. (2015). *Regression Modeling Strategies: With Applications to Linear Models, Logistic and Ordinal Regression, and Survival Analysis* (2nd ed.). Springer.
 - Klein, J. P., & Moeschberger, M. L. (2003). *Survival Analysis: Techniques for Censored and Truncated Data* (2nd ed.). Springer.
+- Kleinbaum, D. G., & Klein, M. (2012). *Survival Analysis: A Self-Learning Text* (3rd ed.). Springer.
 - Therneau, T. M., & Grambsch, P. M. (2000). *Modeling Survival Data: Extending the Cox Model*. Springer.
-- Xue, Y., & Schifano, E. D. (2017). Diagnostics for the Cox model. *Communications for Statistical Applications and Methods*, 24(6), 583–604.
+- Vittinghoff, E., Glidden, D. V., Shiboski, S. C., & McCulloch, C. E. (2012). *Regression Methods in Biostatistics: Linear, Logistic, Survival, and Repeated Measures Models* (2nd ed.). Springer.
+- Xue, Y., & Schifano, E. D. (2017). Diagnostics for the Cox model. *Communications for Statistical Applications and Methods*, 24(6), 583-604.
