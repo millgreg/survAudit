@@ -84,36 +84,13 @@
 Cox proportional hazards models. It integrates proportional hazards
 testing, functional form assessment, influence and outlier diagnostics,
 collinearity checks, and event sufficiency into a single S3 object.</p>
-<p>In routine practice, model diagnostics often either rely exclusively
-on p-values or ignore unverifiable assumptions altogether. A central
-design principle of <code>survAudit</code> is that model assumptions
-differ fundamentally in how far they can be evaluated from observed data
-alone:</p>
-<ul>
-<li>
-<strong>Non-Identifiable</strong>: Assumptions that cannot be
-verified statistically from data alone (e.g., independent censoring,
-absence of unmeasured confounding). These require substantive domain
-knowledge and study-design arguments.</li>
-<li>
-<strong>Partially Assessable</strong>: Assumptions informed by
-residual metrics but requiring visual inspection and analyst judgment
-(e.g., functional form, outlier impact).</li>
-<li>
-<strong>Statistically Assessable</strong>: Assumptions testable via
-formal statistical hypotheses (e.g., proportional hazards, collinearity,
-event sufficiency).</li>
-</ul>
-<p>This tri-partite classification directly structures the audit outputs
-and reporting workflow illustrated below. The underlying residual
-diagnostics implement established methodology from the survival
-literature (Therneau &amp; Grambsch, 2000; Klein &amp; Moeschberger,
-2003). The primary focus of <code>survAudit</code> is diagnostic
-detection and transparent documentation. While this vignette illustrates
-an initial respecification cycle, comprehensive discussions of remedial
-modeling strategies (such as splines, stratification, or time-varying
-coefficients) can be found in the broader survival analysis
-literature.</p>
+<p>The primary focus of <code>survAudit</code> is diagnostic detection
+and transparent documentation. While this vignette illustrates an
+initial respecification cycle, comprehensive discussions of diagnostic
+theory, interpretation, and remedial modeling strategies (such as
+splines, stratification, or time-varying coefficients) can be found in
+the literature listed under <a href="#references-and-further-reading">References and Further
+Reading</a>.</p>
 <hr>
 <div class="section level2">
 <h2 id="case-study-primary-biliary-cholangitis">Case Study: Primary Biliary Cholangitis<a class="anchor" aria-label="anchor" href="#case-study-primary-biliary-cholangitis"></a>
@@ -172,8 +149,31 @@ assumptions are met, it is entirely focused on estimation.</p>
 <div class="section level3">
 <h3 id="run-the-audit">2. Run the Audit<a class="anchor" aria-label="anchor" href="#run-the-audit"></a>
 </h3>
-<p>Pass the fitted model and the original dataset to
-<code><a href="../reference/survAudit.html">survAudit()</a></code>. The <code>data</code> argument is required
+<p>In routine practice, model diagnostics often either rely exclusively
+on p-values or ignore unverifiable assumptions altogether. A central
+design principle of <code>survAudit</code> is that model assumptions
+differ fundamentally in how far they can be evaluated from observed data
+alone:</p>
+<ul>
+<li>
+<strong>Non-Identifiable</strong>: Assumptions that cannot be
+verified statistically from data alone (e.g., independent censoring,
+absence of unmeasured confounding). These require substantive domain
+knowledge and study-design arguments.</li>
+<li>
+<strong>Partially Assessable</strong>: Assumptions informed by
+residual metrics but requiring visual inspection and analyst judgment
+(e.g., functional form, outlier impact).</li>
+<li>
+<strong>Statistically Assessable</strong>: Assumptions testable via
+formal statistical hypotheses (e.g., proportional hazards, collinearity,
+event sufficiency).</li>
+</ul>
+<p>This tri-partite classification is directly mirrored in the audit
+output so that empirical tests and qualitative justifications are
+clearly separated.</p>
+<p>To generate the audit, pass the fitted model and the original dataset
+to <code><a href="../reference/survAudit.html">survAudit()</a></code>. The <code>data</code> argument is required
 because partial models must be refitted when assessing functional
 form.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
@@ -326,35 +326,48 @@ you only need specific diagnostics programmatically without running the
 full report, each component is directly accessible, e.g.,
 <code>audit1$ph$table</code> or <code>audit1$vif</code>; see <a href="#accessing-the-underlying-data">Accessing the Underlying Data</a>
 below.)</p>
-<p>Working through the output section by section:</p>
+<p>Working through the summary output section by section:</p>
+<p><strong>Data Context &amp; Model Info</strong></p>
 <ul>
-<li><p><strong>Data context</strong>: <code>protime</code> has 2 missing
-values, so the model is fitted on 416 of 418 observations. Ten event
-times are tied (6.2%), which is acceptable for the Efron
-approximation.</p></li>
-<li><p><strong>Non-identifiable assumptions</strong>: Both independent
-censoring and absence of unmeasured confounding appear as unfilled
-checkboxes. They require explicit justification from study design; the
-package cannot evaluate them.</p></li>
-<li><p><strong>Goodness-of-fit</strong>: Only signals that the Cox-Snell
+<li>
+<code>protime</code> has 2 missing values, so the model is fitted on
+416 of 418 observations. Ten event times are tied (6.2%), which is
+acceptable for the Efron approximation.</li>
+</ul>
+<p><strong>1. Non-Identifiable Assumptions</strong></p>
+<ul>
+<li>Both independent censoring and absence of unmeasured confounding
+appear as unfilled checkboxes. They require explicit justification from
+study design; the package cannot evaluate them.</li>
+</ul>
+<p><strong>2. Partially Assessable Diagnostics</strong></p>
+<ul>
+<li>
+<strong>Goodness-of-fit</strong>: Only signals that the Cox-Snell
 residuals were computed; the visual assessment is deferred to
-<code>plot(audit, which = "gof")</code>.</p></li>
-<li><p><strong>Functional form / Linearity</strong>: Assesses whether
+<code>plot(audit, which = "gof")</code>.</li>
+<li>
+<strong>Functional form / Linearity</strong>: Assesses whether
 continuous covariates have a linear relationship with the log hazard.
 Because there is no omnibus statistical test for non-linearity in Cox
 models, <code>survAudit</code> does not compute a p-value here. Instead,
 it lists the continuous predictors (<code>age</code>, <code>bili</code>,
 <code>albumin</code>, <code>protime</code>) for visual inspection via
-<code>plot(audit, which = "functional")</code>.</p></li>
-<li><p><strong>Influence</strong>: 69 observations exceed the
+<code>plot(audit, which = "functional")</code>.</li>
+<li>
+<strong>Influence</strong>: 69 observations exceed the
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>/</mi><msqrt><mi>n</mi></msqrt><mo>=</mo><mn>0.098</mn></mrow><annotation encoding="application/x-tex">2/\sqrt{n} = 0.098</annotation></semantics></math>
 threshold. Observation 325 has the largest maximum |DFBETAs| of 0.96,
 which is sizeable relative to the threshold, indicating high sensitivity
-of at least one coefficient to this case.</p></li>
-<li><p><strong>Outliers</strong>: 19 observations have |deviance| &gt;
-1.96 and 9 have |log-odds| &gt; 3.66. The largest deviance residual is
-3.24 (observation 319), suggesting this patient experienced the event
-substantially earlier than the model predicted.</p></li>
+of at least one coefficient to this case.</li>
+<li>
+<strong>Outliers</strong>: 19 observations have |deviance| &gt; 1.96
+and 9 have |log-odds| &gt; 3.66. The largest deviance residual is 3.24
+(observation 319), suggesting this patient experienced the event
+substantially earlier than the model predicted.</li>
+</ul>
+<p><strong>3. Statistically Assessable Assumptions</strong></p>
+<ul>
 <li>
 <p><strong>Proportional hazards</strong>: Evaluated using Schoenfeld
 residuals under the null hypothesis of constant hazard ratios over time
@@ -379,8 +392,9 @@ size grows. Visual inspection of the residual plots is therefore
 essential for assessing whether a statistically flagged violation is
 substantively meaningful.</p>
 </li>
-<li><p><strong>EPV</strong>: 160 events across 6 parameters gives an EPV
-of 26.7, which is adequate (threshold ≥ 20).</p></li>
+<li><p><strong>Event sufficiency (EPV)</strong>: 160 events across 6
+parameters gives an EPV of 26.7, which is adequate (threshold ≥
+20).</p></li>
 <li><p><strong>Collinearity</strong>: All VIFs are near 1, indicating no
 meaningful collinearity.</p></li>
 </ul>
@@ -400,8 +414,7 @@ before deciding on model respecification.</p>
 <p>For models with many continuous covariates, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>
 arranges the panels into a multi-row grid. You can also inspect specific
 covariates individually using the <code>vars</code> argument (e.g.,
-<code>plot(audit1, which = "functional", vars = "bili")</code> or
-<code>vars = c("bili", "protime")</code>).</p>
+<code>plot(audit1, which = "functional", vars = "bili")</code>).</p>
 <p>For each continuous covariate, a restricted Cox model is fitted that
 omits that covariate. The martingale residuals from that restricted
 model are then plotted against the covariate values. Because the
@@ -663,11 +676,116 @@ clinical trajectories.</p>
 <div class="section level2">
 <h2 id="accessing-the-underlying-data">Accessing the Underlying Data<a class="anchor" aria-label="anchor" href="#accessing-the-underlying-data"></a>
 </h2>
-<p>All diagnostic results are stored in the returned S3 object and can
-be extracted directly. This is useful for custom reporting, sensitivity
-analyses, or integration into automated pipelines:</p>
+<p>The <code>survAudit</code> object is a named list organized modularly
+by diagnostic domain. Each slot stores the complete underlying numerical
+data (residual matrices, test statistics, coordinates, and observation
+identifiers), making it straightforward to extract diagnostics for
+custom tables, plots, or sensitivity analyses:</p>
+<table class="table">
+<colgroup>
+<col width="30%">
+<col width="25%">
+<col width="45%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Domain</th>
+<th align="left">Slot</th>
+<th align="left">Key Elements</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>Data Context</strong></td>
+<td align="left"><code>audit$data_context</code></td>
+<td align="left">
+<code>$n</code>, <code>$n_events</code>,
+<code>$n_censored</code>, <code>$censoring_rate</code>,
+<code>$time_range</code>, <code>$time_median</code>,
+<code>$time_iqr</code>, <code>$n_ties</code>,
+<code>$tie_fraction</code>, <code>$missing_data</code>,
+<code>$counting_process</code>
+</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Model Info</strong></td>
+<td align="left"><code>audit$model_info</code></td>
+<td align="left">
+<code>$call</code>, <code>$formula</code>,
+<code>$coefficients</code>, <code>$n_coef</code>, <code>$method</code>,
+<code>$converged</code>
+</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Proportional Hazards</strong></td>
+<td align="left"><code>audit$ph</code></td>
+<td align="left">
+<code>$table</code>, <code>$global_p</code>,
+<code>$raw_residuals</code>, <code>$raw_time</code>,
+<code>$transform</code>, <code>$zph</code>
+</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Functional Form</strong></td>
+<td align="left"><code>audit$functional_form</code></td>
+<td align="left">
+<code>$results[[var]]$residuals</code>,
+<code>$results[[var]]$covariate_values</code>,
+<code>$results[[var]]$loess_fit</code>
+</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Collinearity</strong></td>
+<td align="left"><code>audit$vif</code></td>
+<td align="left">
+<code>$vif</code>, <code>$flagged</code>,
+<code>$message</code>
+</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Event Sufficiency</strong></td>
+<td align="left"><code>audit$epv</code></td>
+<td align="left">
+<code>$n_events</code>, <code>$n_parameters</code>,
+<code>$ratio</code>, <code>$classification</code>
+</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Influence</strong></td>
+<td align="left"><code>audit$influence</code></td>
+<td align="left">
+<code>$dfbeta</code>, <code>$dfbetas</code>,
+<code>$max_dfbetas</code>, <code>$threshold</code>,
+<code>$flagged_obs</code>
+</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Outliers</strong></td>
+<td align="left"><code>audit$outliers</code></td>
+<td align="left">
+<code>$martingale</code>, <code>$deviance</code>,
+<code>$log_odds</code>, <code>$normal_deviate</code>,
+<code>$linear_predictor</code>, <code>$flagged</code>
+</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Goodness-of-Fit</strong></td>
+<td align="left"><code>audit$gof</code></td>
+<td align="left">
+<code>$coxsnell</code>, <code>$plot_x</code>,
+<code>$plot_y</code>
+</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Assumptions</strong></td>
+<td align="left"><code>audit$assumptions</code></td>
+<td align="left">
+<code>$non_identifiable</code>,
+<code>$partially_assessable</code>, <code>$assessable</code>
+</td>
+</tr>
+</tbody>
+</table>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># The full cox.zph table</span></span>
+<code class="sourceCode R"><span><span class="co"># Extract the full Schoenfeld test table</span></span>
 <span><span class="va">audit2</span><span class="op">$</span><span class="va">ph</span><span class="op">$</span><span class="va">table</span></span>
 <span><span class="co">#&gt;                      chisq df           p</span></span>
 <span><span class="co">#&gt; age            0.001048017  1 0.974174526</span></span>
@@ -677,12 +795,17 @@ analyses, or integration into automated pipelines:</p>
 <span><span class="co">#&gt; factor(edema)  4.083722890  2 0.129786895</span></span>
 <span><span class="co">#&gt; GLOBAL        14.199356231  6 0.027486814</span></span>
 <span></span>
-<span><span class="co"># Martingale residuals from the full model</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">audit2</span><span class="op">$</span><span class="va">outliers</span><span class="op">$</span><span class="va">martingale</span><span class="op">)</span></span>
-<span><span class="co">#&gt;          1          2          3          4          5          6 </span></span>
-<span><span class="co">#&gt; -0.8720591 -0.5779090  0.6736047  0.2358746 -0.1974496  0.7268053</span></span>
+<span><span class="co"># Extract the DFBETAs matrix for specific inspection</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">audit2</span><span class="op">$</span><span class="va">influence</span><span class="op">$</span><span class="va">dfbetas</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"log(bili)"</span>, <span class="st">"log(protime)"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      log(bili)  log(protime)</span></span>
+<span><span class="co">#&gt; 1 -0.020844152 -0.0023582082</span></span>
+<span><span class="co">#&gt; 2  0.007457324  0.0221250113</span></span>
+<span><span class="co">#&gt; 3 -0.041980619  0.0479636337</span></span>
+<span><span class="co">#&gt; 4  0.016153939 -0.0215398940</span></span>
+<span><span class="co">#&gt; 5  0.002495595 -0.0000866959</span></span>
+<span><span class="co">#&gt; 6 -0.029771857  0.0032459797</span></span>
 <span></span>
-<span><span class="co"># Flagged influential observations</span></span>
+<span><span class="co"># Observation row names flagged for high influence</span></span>
 <span><span class="va">audit2</span><span class="op">$</span><span class="va">influence</span><span class="op">$</span><span class="va">flagged_obs</span></span>
 <span><span class="co">#&gt;  [1] "1"   "3"   "8"   "10"  "12"  "18"  "19"  "27"  "30"  "39"  "41"  "44" </span></span>
 <span><span class="co">#&gt; [13] "49"  "54"  "56"  "57"  "62"  "63"  "69"  "75"  "76"  "77"  "81"  "82" </span></span>
@@ -730,17 +853,27 @@ explicitly justified.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+<h2 id="references-and-further-reading">References and Further Reading<a class="anchor" aria-label="anchor" href="#references-and-further-reading"></a>
 </h2>
 <ul>
+<li>Collett, D. (2015). <em>Modelling Survival Data in Medical
+Research</em> (3rd ed.). CRC Press.</li>
+<li>Harrell, F. E. (2015). <em>Regression Modeling Strategies: With
+Applications to Linear Models, Logistic and Ordinal Regression, and
+Survival Analysis</em> (2nd ed.). Springer.</li>
 <li>Klein, J. P., &amp; Moeschberger, M. L. (2003). <em>Survival
 Analysis: Techniques for Censored and Truncated Data</em> (2nd ed.).
 Springer.</li>
+<li>Kleinbaum, D. G., &amp; Klein, M. (2012). <em>Survival Analysis: A
+Self-Learning Text</em> (3rd ed.). Springer.</li>
 <li>Therneau, T. M., &amp; Grambsch, P. M. (2000). <em>Modeling Survival
 Data: Extending the Cox Model</em>. Springer.</li>
+<li>Vittinghoff, E., Glidden, D. V., Shiboski, S. C., &amp; McCulloch,
+C. E. (2012). <em>Regression Methods in Biostatistics: Linear, Logistic,
+Survival, and Repeated Measures Models</em> (2nd ed.). Springer.</li>
 <li>Xue, Y., &amp; Schifano, E. D. (2017). Diagnostics for the Cox
 model. <em>Communications for Statistical Applications and Methods</em>,
-24(6), 583–604.</li>
+24(6), 583-604.</li>
 </ul>
 </div>
   </div>
