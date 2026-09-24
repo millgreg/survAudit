@@ -4,7 +4,7 @@
 \alias{.plot_gof}
 \title{Plot goodness-of-fit diagnostics}
 \usage{
-.plot_gof(gof, col_point, col_ref, alpha_pt)
+.plot_gof(gof, col_point, col_ref, alpha_pt, max_points = 5000L)
 }
 \arguments{
 \item{gof}{Goodness-of-fit diagnostics list.}
@@ -14,6 +14,8 @@
 \item{col_ref}{Reference line colour.}
 
 \item{alpha_pt}{Point alpha.}
+
+\item{max_points}{Optional maximum number of points to plot.}
 }
 \value{
 A \code{ggplot} object.

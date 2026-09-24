@@ -4,7 +4,7 @@
 \alias{.plot_outliers}
 \title{Plot outlier diagnostics}
 \usage{
-.plot_outliers(ol, col_point, col_ref, alpha_pt)
+.plot_outliers(ol, col_point, col_ref, alpha_pt, max_points = 5000L)
 }
 \arguments{
 \item{ol}{Outlier diagnostics list.}
@@ -14,6 +14,8 @@
 \item{col_ref}{Reference line colour.}
 
 \item{alpha_pt}{Point alpha.}
+
+\item{max_points}{Optional maximum number of points to plot per residual type.}
 }
 \value{
 A \code{ggplot} object.

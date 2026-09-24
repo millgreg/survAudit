@@ -91,7 +91,7 @@ test_that("survAudit object has all expected components", {
   }
 })
 
-# ── Test 7: Input validation — non-coxph object produces error ───
+# ── Test 7: Input validation: non-coxph object produces error ───
 test_that("survAudit() errors on non-coxph input", {
   expect_error(survAudit(lm(mpg ~ wt, data = mtcars)))
   expect_error(survAudit("not a model"))
@@ -266,4 +266,77 @@ test_that("plot() supports vars argument for targeted covariate plotting", {
     "None of the requested covariates"
   )
 })
+
+# -- Test 21: plot() with max_points subsampling -------------------
+test_that("plot() supports max_points subsampling with extreme preservation", {
+  audit_test <- survAudit(fit, data = veteran)
+
+  # 1. Null disables subsampling (no caption)
+  p_ph_full <- plot(audit_test, which = "ph", max_points = NULL, ask = FALSE)
+  expect_null(p_ph_full$labels$caption)
+
+  # 2. Small max_points triggers subsampling and caption on all panels
+  # veteran has 137 observations; set max_points = 30
+  p_ph_sub <- plot(audit_test, which = "ph", max_points = 30, ask = FALSE)
+  expect_match(p_ph_sub$labels$caption, "Points subsampled to 30")
+  counts_ph <- table(p_ph_sub$data$variable)
+  expect_true(all(counts_ph <= 30))
+
+  p_ff_sub <- plot(audit_test, which = "functional", max_points = 30, ask = FALSE)
+  expect_match(p_ff_sub$labels$caption, "Points subsampled to 30")
+  counts_ff <- table(p_ff_sub$data$variable)
+  expect_true(all(counts_ff <= 30))
+
+  p_inf_sub <- plot(audit_test, which = "influence", max_points = 30, ask = FALSE)
+  expect_match(p_inf_sub$labels$caption, "Points subsampled to 30")
+  expect_match(p_inf_sub$labels$caption, "all flagged cases retained")
+  counts_inf <- table(p_inf_sub$data$variable)
+  expect_true(all(counts_inf <= 30))
+
+  # Verify extreme preservation in influence: all flagged points must be present
+  thresh <- audit_test$influence$threshold
+  for (v in names(counts_inf)) {
+    orig_flagged <- which(abs(audit_test$influence$dfbetas[, v]) > thresh)
+    if (length(orig_flagged) > 0) {
+      sub_obs <- p_inf_sub$data$obs[p_inf_sub$data$variable == v]
+      expect_true(all(orig_flagged %in% sub_obs))
+    }
+  }
+
+  p_out_sub <- plot(audit_test, which = "outliers", max_points = 30, ask = FALSE)
+  expect_match(p_out_sub$labels$caption, "Points subsampled to 30")
+  expect_match(p_out_sub$labels$caption, "all flagged cases retained")
+  counts_out <- table(p_out_sub$data$type)
+  expect_true(all(counts_out <= 30))
+
+  # Verify extreme preservation in outliers (deviance)
+  flagged_dev <- as.integer(audit_test$outliers$flagged$deviance)
+  if (length(flagged_dev) > 0) {
+    sub_dev_lp <- p_out_sub$data$linear_predictor[p_out_sub$data$type == "Deviance"]
+    orig_dev_lp <- audit_test$outliers$linear_predictor[flagged_dev]
+    expect_true(all(orig_dev_lp %in% sub_dev_lp))
+  }
+
+  p_gof_sub <- plot(audit_test, which = "gof", max_points = 30, ask = FALSE)
+  expect_match(p_gof_sub$labels$caption, "systematically subsampled to 30")
+  expect_equal(nrow(p_gof_sub$data), 30)
+
+  # Verify strict preservation when flagged cases exceed max_points
+  # celltypesmallcell has 13 flagged cases; test max_points = 5
+  p_inf_tight <- plot(audit_test, which = "influence", max_points = 5, ask = FALSE)
+  sub_obs_tight <- p_inf_tight$data$obs[p_inf_tight$data$variable == "celltypesmallcell"]
+  orig_flagged_tight <- which(abs(audit_test$influence$dfbetas[, "celltypesmallcell"]) > thresh)
+  expect_equal(length(sub_obs_tight), length(orig_flagged_tight))
+  expect_true(all(orig_flagged_tight %in% sub_obs_tight))
+
+  # Verify defensive sorting in gof plot even with shuffled input
+  audit_shuffled <- audit_test
+  set.seed(42)
+  shuf_idx <- sample(seq_along(audit_shuffled$gof$plot_x))
+  audit_shuffled$gof$plot_x <- audit_shuffled$gof$plot_x[shuf_idx]
+  audit_shuffled$gof$plot_y <- audit_shuffled$gof$plot_y[shuf_idx]
+  p_gof_shuf <- plot(audit_shuffled, which = "gof", max_points = 30, ask = FALSE)
+  expect_false(is.unsorted(p_gof_shuf$data$x))
+})
+
 

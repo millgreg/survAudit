@@ -11,7 +11,8 @@
   col_ref,
   col_thresh,
   alpha_pt,
-  vars = NULL
+  vars = NULL,
+  max_points = 5000L
 )
 }
 \arguments{
@@ -28,6 +29,8 @@
 \item{alpha_pt}{Point alpha.}
 
 \item{vars}{Optional character or integer vector of covariates to plot.}
+
+\item{max_points}{Optional maximum number of points to plot per covariate.}
 }
 \value{
 A \code{ggplot} object.

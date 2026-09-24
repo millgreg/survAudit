@@ -2,12 +2,13 @@
 % Please edit documentation in R/plot.survAudit.R
 \name{plot.survAudit}
 \alias{plot.survAudit}
-\title{Plot survAudit Diagnostics}
+\title{Plot Cox Proportional Hazards Model Diagnostics}
 \usage{
 \method{plot}{survAudit}(
   x,
   which = c("ph", "functional", "influence", "outliers", "gof"),
   vars = NULL,
+  max_points = 5000L,
   ask = interactive(),
   ...
 )
@@ -16,14 +17,17 @@
 \item{x}{An object of class \code{survAudit}.}
 
 \item{which}{Character vector specifying which plots to produce.
-Valid values are \code{"ph"}, \code{"functional"},
-\code{"influence"}, \code{"outliers"}, and \code{"gof"}.
-Defaults to all five.}
+Subset of \code{c("ph", "functional", "influence", "outliers", "gof")}.
+Defaults to all available diagnostics.}
 
-\item{vars}{Optional character or integer vector specifying which covariates to
+\item{vars}{Optional character or numeric vector specifying covariates to
 include in covariate-specific plots (\code{"ph"}, \code{"functional"}, and
 \code{"influence"}). If \code{NULL} (the default), all available covariates
 are included.}
+
+\item{max_points}{Integer specifying the maximum number of observations to
+display per panel (and to use for smoothing). Defaults to 5000. If \code{NULL}
+or non-positive, all observations are used without subsampling.}
 
 \item{ask}{Logical. If \code{TRUE} (the default in interactive
 sessions), the user is prompted between plots.}
@@ -31,39 +35,51 @@ sessions), the user is prompted between plots.}
 \item{...}{Additional arguments (currently ignored).}
 }
 \value{
-A \code{ggplot} object (invisibly). If multiple plots are
-requested, a named list of \code{ggplot} objects is returned
+A \code{ggplot} object (if a single plot was requested) or a
+named list of \code{ggplot} objects (if multiple plots were produced),
 invisibly.
 }
 \description{
-Produces \code{ggplot2} diagnostic panels for a Cox PH model audit.
-Five plot types are available: proportional hazards, functional form,
-influence diagnostics, outlier assessment, and global goodness-of-fit.
-}
-\details{
-\strong{Description of Plots:}
+Produces ggplot2-based diagnostic displays for a \code{survAudit} object.
+Five diagnostic panels are available:
 \itemize{
 \item \strong{Proportional Hazards (\code{which = "ph"}):} Plots scaled
-Schoenfeld residuals against transformed time. A LOESS smooth is overlaid,
-and a dashed reference line is positioned at the overall model coefficient
-(\eqn{\hat{\beta}}).
-\item \strong{Functional Form (\code{which = "functional"}):} Plots martingale
-residuals from a null Cox model against each continuous covariate. A LOESS
-smooth and a linear reference line are overlaid.
+Schoenfeld residuals against transformed time for each covariate, with a
+LOESS smoother and horizontal reference lines at the estimated coefficients.
+\item \strong{Functional Form (\code{which = "functional"}):} Plots
+martingale residuals from a null (covariate-free) Cox model against
+each continuous covariate, with a LOESS smoother and a linear fit
+reference line to screen for non-linear effects.
 \item \strong{Influence Diagnostics (\code{which = "influence"}):} Plots
-standardized DFBETAs for each observation across all covariates. Dotted
-horizontal lines indicate the threshold for high influence (\eqn{\pm 2/\sqrt{n}}).
-Analysts should look for observations that stray far from the main cluster and
-cross these thresholds.
-\item \strong{Outlier Assessment (\code{which = "outliers"}):} Plots martingale,
-deviance, log-odds, and normal deviate residuals against the linear predictor.
-Dashed reference lines indicate common thresholds for extreme values
-(e.g., \eqn{\pm 1.96} for deviance and normal deviate, \eqn{\pm 3.66} for log-odds).
-Analysts should visually check for points that systematically exceed these bands.
+standardized DFBETA statistics for each covariate across observation
+indices, with diagnostic threshold reference lines at
+\eqn{\pm 2 / \sqrt{n}}.
+\item \strong{Outlier Assessment (\code{which = "outliers"}):} A four-panel
+display showing martingale, deviance, log-odds, and normal deviate residuals
+against the linear predictor, with reference threshold lines.
 \item \strong{Global Goodness-of-Fit (\code{which = "gof"}):} Plots the cumulative
 hazard of the Cox-Snell residuals against the residuals themselves, with a
 dashed 45-degree reference line.
 }
+}
+\details{
+\strong{Large-Sample Subsampling:}
+For large datasets (e.g., \eqn{n > 5000}), \code{plot.survAudit} subsamples
+data to \code{max_points} observations per panel (default 5000) to prevent
+overplotting and rendering delays:
+\itemize{
+\item \strong{\code{"ph"} and \code{"functional"}:} Randomly subsamples points
+per covariate; smoothers are computed on this subsample for fast display.
+\item \strong{\code{"influence"} and \code{"outliers"}:} Extreme-preserving
+subsampling. All observations exceeding diagnostic thresholds
+(\eqn{\pm 2/\sqrt{n}} for DFBETAs, \eqn{\pm 1.96} for deviance and normal deviate,
+\eqn{\pm 3.66} for log-odds, and \eqn{|r| > 2} for martingale) are strictly
+retained; only non-flagged points are subsampled.
+\item \strong{\code{"gof"}:} Systematic quantile subsampling across the
+Cox-Snell cumulative hazard curve.
+}
+A plot caption indicates whenever subsampling is active. To display all points
+without subsampling, set \code{max_points = NULL}.
 }
 \examples{
 library(survival)
@@ -72,4 +88,5 @@ fit <- coxph(Surv(time, status) ~ trt + celltype + karno + age,
 audit <- survAudit(fit, data = veteran)
 plot(audit, which = "ph")
 plot(audit, which = "functional", vars = "age")
+plot(audit, which = "influence", max_points = 500)
 }

@@ -4,7 +4,15 @@
 \alias{.plot_ph}
 \title{Plot PH diagnostics (Schoenfeld residuals)}
 \usage{
-.plot_ph(ph, col_point, col_smooth, col_ref, alpha_pt, vars = NULL)
+.plot_ph(
+  ph,
+  col_point,
+  col_smooth,
+  col_ref,
+  alpha_pt,
+  vars = NULL,
+  max_points = 5000L
+)
 }
 \arguments{
 \item{ph}{PH diagnostics list from the survAudit object.}
@@ -18,6 +26,8 @@
 \item{alpha_pt}{Point alpha.}
 
 \item{vars}{Optional character or integer vector of covariates to plot.}
+
+\item{max_points}{Optional maximum number of points to plot/smooth per covariate.}
 }
 \value{
 A \code{ggplot} object.
