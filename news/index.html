@@ -54,11 +54,11 @@
     <div class="section level2">
 <h2 class="page-header" data-toc-text="1.2.0" id="survaudit-120">survAudit 1.2.0<a class="anchor" aria-label="anchor" href="#survaudit-120"></a></h2>
 <ul><li>
-<strong>Subsampling Performance</strong>: Added <code>max_points</code> parameter (default 5000) to <code><a href="../reference/plot.survAudit.html">plot.survAudit()</a></code>. For large cohorts, unflagged points are downsampled systematically across quantiles to avoid plotting bottlenecks, while flagged cases (extreme deviance/log-odds residuals and high DFBETAs) are deterministically preserved.</li>
+<strong>Subsampling</strong>: Added <code>max_points</code> (default 5000) to <code><a href="../reference/plot.survAudit.html">plot.survAudit()</a></code> to optimize plotting in large datasets while retaining all flagged outliers and influential cases.</li>
 <li>
-<strong>Console Formatting</strong>: Improved <code><a href="../reference/print.survAudit.html">print.survAudit()</a></code> by wrapping the outlier diagnostic summary across two indented lines, keeping output within standard console widths.</li>
+<strong>Console Output</strong>: Wrapped outlier summary in <code><a href="../reference/print.survAudit.html">print.survAudit()</a></code> across two lines to fit standard console widths.</li>
 <li>
-<strong>Documentation &amp; Vignettes</strong>: Restructured vignette and case study to enhance clarity, added cross-reference links for non-identifiable assumptions, refined statistical terminology to “smoothed curve” and “LOESS curve”, and shortened administrative censoring justification.</li>
+<strong>Documentation</strong>: Refined vignette and case study terminology, added section links, and updated assumption justifications.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="1.1.0" id="survaudit-110">survAudit 1.1.0<a class="anchor" aria-label="anchor" href="#survaudit-110"></a></h2>
