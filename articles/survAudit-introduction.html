@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">survAudit</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.0</span>
       </span>
     </div>
 
@@ -141,7 +141,7 @@ package to illustrate a typical audit workflow.</p>
 <span><span class="co">#&gt; Wald test            = 219.1  on 6 df,   p=&lt;2e-16</span></span>
 <span><span class="co">#&gt; Score (logrank) test = 330.2  on 6 df,   p=&lt;2e-16</span></span></code></pre></div>
 <p>The model shows strong discrimination (Concordance = 0.813) and four
-predictors with
+continuous predictors with
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>&lt;</mo><mn>0.001</mn></mrow><annotation encoding="application/x-tex">p &lt; 0.001</annotation></semantics></math>.
 Standard Cox output contains no information about whether model
 assumptions are met, it is entirely focused on estimation.</p>
@@ -169,7 +169,7 @@ residual metrics but requiring visual inspection and analyst judgment
 formal statistical hypotheses (e.g., proportional hazards, collinearity,
 event sufficiency).</li>
 </ul>
-<p>This tri-partite classification is directly mirrored in the audit
+<p>This three-part classification is directly mirrored in the audit
 output so that empirical tests and qualitative justifications are
 clearly separated.</p>
 <p>To generate the audit, pass the fitted model and the original dataset
@@ -193,7 +193,8 @@ form.</p>
 <span><span class="co">#&gt; ── Partially Assessable Assumptions ───────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Outlier Impact</span></span>
-<span><span class="co">#&gt;     Flagged observations: 19 by deviance residuals, 9 by log-odds, 9 by normal deviate. Use plot(audit, which = 'outliers') to inspect residual distributions.</span></span>
+<span><span class="co">#&gt;     Flagged observations: 19 by deviance residuals, 9 by log-odds, 9 by normal deviate.</span></span>
+<span><span class="co">#&gt;     Use plot(audit, which = 'outliers') to inspect residual distributions.</span></span>
 <span><span class="co">#&gt;   Missing Data</span></span>
 <span><span class="co">#&gt;     1 of 7 variable(s) have missing values (2 total missing entries).</span></span>
 <span><span class="co">#&gt;   Functional Form / Linearity of Continuous Predictors</span></span>
@@ -220,10 +221,11 @@ form.</p>
 <p>The compact print output provides a quick orientation. The
 <code>[ ]</code> checkboxes for non-identifiable assumptions are
 intentionally unfilled: these cannot be evaluated from data and require
-the analyst to supply a design-based justification (see the last
-section). The statistically assessable block immediately flags
-proportional hazards violations for <code>bili</code> and
-<code>protime</code>, and reports an EPV of 26.7, which is adequate.</p>
+the analyst to supply a design-based justification (see <a href="#documenting-non-identifiable-assumptions">Documenting
+Non-Identifiable Assumptions</a> below). The statistically assessable
+block immediately flags proportional hazards violations for
+<code>bili</code> and <code>protime</code>, and reports an EPV of 26.7,
+which is adequate.</p>
 <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> provides the full diagnostic report including
 numeric results:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
@@ -322,9 +324,9 @@ numeric results:</p>
 per-covariate chi-squared values), the five most influential
 observations by max |DFBETAs|, and the five largest deviance residuals,
 all with the original row identifiers from <code>pbc</code>. (Note: If
-you only need specific diagnostics programmatically without running the
-full report, each component is directly accessible, e.g.,
-<code>audit1$ph$table</code> or <code>audit1$vif</code>; see <a href="#accessing-the-underlying-data">Accessing the Underlying Data</a>
+you only need specific diagnostics without running the full report, each
+component is directly accessible, e.g., <code>audit1$ph$table</code> or
+<code>audit1$vif</code>; see <a href="#accessing-the-underlying-data">Accessing the Underlying Data</a>
 below.)</p>
 <p>Working through the summary output section by section:</p>
 <p><strong>Data Context &amp; Model Info</strong></p>
@@ -372,25 +374,21 @@ substantially earlier than the model predicted.</li>
 <p><strong>Proportional hazards</strong>: Evaluated using Schoenfeld
 residuals under the null hypothesis of constant hazard ratios over time
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>0</mn></msub><mo>:</mo><mi>β</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>β</mi></mrow><annotation encoding="application/x-tex">H_0: \beta(t) = \beta</annotation></semantics></math>).
-A statistically significant test
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>&lt;</mo><mn>0.05</mn></mrow><annotation encoding="application/x-tex">p &lt; 0.05</annotation></semantics></math>)
-indicates an assumption violation. Importantly, a non-significant test
-does not rule out non-proportionality, as the test has limited power
-against non-monotone patterns or in smaller samples. Here, the global
-test is statistically significant
+Here, the global test is statistically significant
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.001</mn></mrow><annotation encoding="application/x-tex">p = 0.001</annotation></semantics></math>),
 with <code>protime</code>
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.003</mn></mrow><annotation encoding="application/x-tex">p = 0.003</annotation></semantics></math>)
 and <code>bili</code>
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.005</mn></mrow><annotation encoding="application/x-tex">p = 0.005</annotation></semantics></math>)
 individually flagged.</p>
-<p>Two limitations of the proportional hazards test are worth keeping in
-mind: (1) it detects only linear trends in the Schoenfeld residuals over
-time and can miss non-monotone violations; and (2) like any chi-squared
-test, it becomes increasingly sensitive to minor deviations as sample
-size grows. Visual inspection of the residual plots is therefore
-essential for assessing whether a statistically flagged violation is
-substantively meaningful.</p>
+<p>Two limitations of the formal test are critical to keep in mind:
+first, it tests only for linear trends in the residuals over time and
+may miss non-monotone patterns (meaning a non-significant p-value does
+not guarantee proportionality); and second, it becomes increasingly
+sensitive to minor deviations as sample size grows. Visual inspection of
+the residual plots is therefore essential for assessing whether a
+flagged violation represents a meaningful departure from constant
+hazards.</p>
 </li>
 <li><p><strong>Event sufficiency (EPV)</strong>: 160 events across 6
 parameters gives an EPV of 26.7, which is adequate (threshold ≥
@@ -420,18 +418,18 @@ omits that covariate. The martingale residuals from that restricted
 model are then plotted against the covariate values. Because the
 restricted model omits the covariate, its residuals will pick up the
 covariate’s effect on the outcome. If the relationship is correctly
-specified as linear, the LOESS smooth should trace an approximately
-straight line. A curved or non-monotone smooth indicates that the linear
-specification is inadequate and that a transformation or more flexible
-term may be needed.</p>
-<p>For <code>bili</code>, the smooth rises sharply at low values and
-flattens at high values, tracing a logarithmic curve consistent with a
-log-transformation. For <code>protime</code>, the smooth is
-approximately flat at low values before rising sharply and then
-dropping, again suggesting a non-linear relationship. In contrast,
-<code>age</code> and <code>albumin</code> track the linear reference
-lines closely, with the linear fit remaining well within the LOESS
-confidence bands throughout their range.</p>
+specified as linear, the LOESS curve should trace an approximately
+straight line. A curved or non-monotone pattern indicates that the
+linear specification is inadequate and that a transformation or more
+flexible term may be needed.</p>
+<p>For <code>bili</code>, the smoothed curve rises sharply at low values
+and flattens at high values, tracing a logarithmic curve consistent with
+a log-transformation. For <code>protime</code>, the smoothed curve is
+approximately flat at low values before rising and then dropping, again
+suggesting a non-linear relationship. In contrast, <code>age</code> and
+<code>albumin</code> track the linear reference lines closely, with the
+linear fit remaining well within the LOESS confidence bands throughout
+their range.</p>
 <p>Common remedies for non-linearity include log-transforming the
 covariate, using polynomial or spline terms, or categorising the
 variable if a meaningful clinical threshold exists.</p>
@@ -455,13 +453,14 @@ small and clinically irrelevant drift can yield a significant p-value.
 The plot is therefore the primary diagnostic; the p-value is supporting
 evidence.</p>
 <p>For <code>bili</code> (p = 0.005) and <code>protime</code> (p =
-0.003), the smoothed residual plots show clear trends over time. For
-<code>protime</code>, the hazard ratio appears to decrease over
-follow-up, meaning its prognostic effect is stronger early in follow-up
-than later. This is an important finding: a single time-averaged hazard
-ratio obscures this time-varying behaviour. For the remaining
-covariates, the smoothed curves remain roughly horizontal and easily
-encompass the reference line within their confidence bands.</p>
+0.003), the smoothed residual plots show clear departures from
+horizontal lines. For <code>protime</code>, the curve slopes downward
+over follow-up, indicating that its prognostic effect is strongest in
+the early months and weakens over time. A standard Cox model estimates
+only a single summary hazard ratio across the entire study period, which
+obscures this shift from acute to attenuated risk. For the remaining
+covariates, the smoothed curves remain roughly horizontal, with the
+reference line staying well within their confidence bands.</p>
 </div>
 <div class="section level4">
 <h4 id="goodness-of-fit">Goodness of Fit<a class="anchor" aria-label="anchor" href="#goodness-of-fit"></a>
@@ -475,12 +474,13 @@ well-fitting model will track the 45-degree reference line closely. Here
 the curve follows the diagonal through most of the range, indicating
 acceptable macro-level calibration. A modest deviation in the upper tail
 is common and typically reflects data sparsity at long follow-up times
-rather than systematic misfit. Crucially, goodness-of-fit is an omnibus,
-macro-level assessment. Even though the curve tracks the diagonal
-reasonably well overall, this global check is blind to the local
-non-linearities and proportional hazards violations identified above. An
-analyst who relies solely on global calibration would be falsely
-reassured. We therefore proceed to Section 4 to respecify the model.</p>
+rather than systematic misfit.</p>
+<p>Crucially, goodness-of-fit is an omnibus, macro-level assessment.
+Even though the curve tracks the diagonal reasonably well overall, this
+global check is blind to the local non-linearities and proportional
+hazards violations identified above. An analyst who relies solely on
+global calibration would be falsely reassured. We therefore proceed to
+Section 4 to respecify the model.</p>
 </div>
 </div>
 <div class="section level3">
@@ -587,9 +587,9 @@ reassured. We therefore proceed to Section 4 to respecify the model.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   No collinearity issues detected.</span></span></code></pre></div>
 <p>Comparing this report to <code>audit1</code> highlights what the
-transformations did and did not fix. On the positive side, the PH
-violation for <code>bili</code> is resolved (p = 0.306), and global
-collinearity remains negligible. On the negative side, the PH violation
+transformations did and did not fix. The formal PH test for
+<code>bili</code> is no longer statistically significant (p = 0.306),
+and global collinearity remains negligible. However, the PH violation
 for <code>log(protime)</code> persists (p = 0.003), the global PH test
 is still significant (p = 0.027), and the number of flagged influential
 observations has increased slightly (74 vs. 69). The visual diagnostics
@@ -600,12 +600,12 @@ below examine each of these in detail.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit2</span>, which <span class="op">=</span> <span class="st">"functional"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="survAudit-introduction_files/figure-html/audit-corrected-functional-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
-<p>The smooth for <code>log(bili)</code> is now approximately linear,
-confirming that the log scale captures the relationship adequately. The
-smooth for <code>log(protime)</code> still shows curvature, indicating
-that the log transformation did not fully resolve the non-linearity.
-Further exploration, such as a square-root transformation, splines, or
-categorisation, would be warranted before finalising the model.</p>
+<p>The smoothed curves for both <code>log(bili)</code> and
+<code>log(protime)</code> are now approximately linear across the vast
+majority of observations, confirming that the log scale captures their
+functional forms well. For <code>log(protime)</code>, slight deviations
+at the lower and upper boundaries largely reflect data sparsity and a
+few extreme observations rather than systematic misspecification.</p>
 </div>
 <div class="section level4">
 <h4 id="proportional-hazards-re-assessment">Proportional Hazards Re-Assessment<a class="anchor" aria-label="anchor" href="#proportional-hazards-re-assessment"></a>
@@ -613,16 +613,23 @@ categorisation, would be warranted before finalising the model.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">audit2</span>, which <span class="op">=</span> <span class="st">"ph"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="survAudit-introduction_files/figure-html/audit-corrected-ph-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
-<p>The PH assumption is now satisfied for <code>log(bili)</code> (p =
-0.306): the time-varying behaviour seen in the initial model was largely
-a consequence of the non-linear scale rather than a genuine change in
-the hazard ratio over time. The violation for <code>log(protime)</code>
-persists (p = 0.003), suggesting its effect does change over follow-up
-regardless of scale. Common approaches to address a genuine proportional
-hazards violation include stratifying the model on the offending
-variable or allowing its effect to vary over time by including an
-interaction between the covariate and a function of time (i.e., fitting
-a time-varying coefficient).</p>
+<p>For <code>log(bili)</code>, the formal test is no longer
+statistically significant (p = 0.306). However, the smoothed curve shows
+an undulating pattern (rising, dipping, and rising again in the tail)
+rather than a perfectly flat line. Because <code>cox.zph</code> tests
+specifically for a linear trend over time, opposing slopes can cancel
+out and yield a non-significant test. This demonstrates why visual
+inspection is essential. At the same time, the confidence bands widen
+substantially at later follow-up times due to data sparsity, making it
+difficult to distinguish genuine time-varying dynamics from tail
+variability.</p>
+<p>For <code>log(protime)</code>, a clear downward slope persists (p =
+0.003), confirming that its time-varying effect remains whether
+prothrombin time is modeled linearly or log-transformed. Common
+approaches to address a genuine proportional hazards violation include
+stratifying the model on the offending variable or allowing its effect
+to vary over time by including an interaction between the covariate and
+a function of time (i.e., fitting a time-varying coefficient).</p>
 </div>
 <div class="section level4">
 <h4 id="influence">Influence<a class="anchor" aria-label="anchor" href="#influence"></a>
@@ -784,6 +791,9 @@ custom tables, plots, or sensitivity analyses:</p>
 </tr>
 </tbody>
 </table>
+<p>The following examples illustrate how specific diagnostic tables,
+matrices, and flagged observations can be extracted directly using
+standard list indexing:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Extract the full Schoenfeld test table</span></span>
 <span><span class="va">audit2</span><span class="op">$</span><span class="va">ph</span><span class="op">$</span><span class="va">table</span></span>
@@ -826,12 +836,12 @@ object:</p>
 <code class="sourceCode R"><span><span class="va">audit2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/document_assumption.html">document_assumption</a></span><span class="op">(</span></span>
 <span>  <span class="va">audit2</span>,</span>
 <span>  assumption <span class="op">=</span> <span class="st">"independent_censoring"</span>,</span>
-<span>  justification <span class="op">=</span> <span class="st">"Censoring was purely administrative (end-of-study cutoff). No competing events or loss to follow-up related to prognosis."</span></span>
+<span>  justification <span class="op">=</span> <span class="st">"Censoring was purely administrative (end-of-study cutoff)."</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># The recorded text is stored directly within the audit object:</span></span>
 <span><span class="va">audit2</span><span class="op">$</span><span class="va">assumptions</span><span class="op">$</span><span class="va">non_identifiable</span><span class="op">$</span><span class="va">independent_censoring</span><span class="op">$</span><span class="va">justification</span></span>
-<span><span class="co">#&gt; [1] "Censoring was purely administrative (end-of-study cutoff). No competing events or loss to follow-up related to prognosis."</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "Censoring was purely administrative (end-of-study cutoff)."</span></span></code></pre></div>
 <p>This attaches the justification to the audit object. In the compact
 <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> output, the corresponding checkbox is marked as
 completed (<code>[x] Independent censoring</code>), and
@@ -842,14 +852,17 @@ assumption header.</p>
 <div class="section level2">
 <h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
 </h2>
-<p>The respecified model resolved the functional form and PH issues for
-bilirubin, but <code>log(protime)</code> remains problematic on both
-counts. Several highly influential observations persist across both
-model specifications. In practice, the analyst would continue iterating
-by investigating the flagged cases, exploring alternative specifications
-for prothrombin time (e.g., stratification or splines), and re-auditing
-after each change until the remaining diagnostics are either resolved or
-explicitly justified.</p>
+<p>The respecified model largely resolved the functional form for both
+bilirubin and prothrombin time. However, proportional hazards remain
+violated or questionable for both variables: prothrombin time retains a
+statistically significant downward drift over follow-up, while bilirubin
+displays notable residual variation over time despite a non-significant
+linear test. Several highly influential observations also persist across
+both model specifications. In practice, the analyst would continue
+iterating by investigating the flagged cases, exploring specifications
+that accommodate time-varying effects or stratification for both
+predictors, and re-auditing after each change until the remaining
+diagnostics are either resolved or explicitly justified.</p>
 <hr>
 </div>
 <div class="section level2">

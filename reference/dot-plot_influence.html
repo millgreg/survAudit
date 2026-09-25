@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">survAudit</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.0</span>
       </span>
     </div>
 
@@ -64,7 +64,8 @@
 <span>  <span class="va">col_ref</span>,</span>
 <span>  <span class="va">col_thresh</span>,</span>
 <span>  <span class="va">alpha_pt</span>,</span>
-<span>  vars <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  max_points <span class="op">=</span> <span class="fl">5000L</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -98,6 +99,10 @@
 
 <dt id="arg-vars">vars<a class="anchor" aria-label="anchor" href="#arg-vars"></a></dt>
 <dd><p>Optional character or integer vector of covariates to plot.</p></dd>
+
+
+<dt id="arg-max-points">max_points<a class="anchor" aria-label="anchor" href="#arg-max-points"></a></dt>
+<dd><p>Optional maximum number of points to plot per covariate.</p></dd>
 
 </dl></div>
     <div id="value">

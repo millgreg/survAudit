@@ -20,7 +20,7 @@ sufficiency checks."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/a
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">survAudit</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.0</span>
       </span>
     </div>
 
@@ -143,7 +143,7 @@ The audit focuses on the fundamental assumptions of Cox regression:</p><ul><li><
 the <code>cox.zph</code> test.</p></li>
 <li><p><strong>Functional Form:</strong> Evaluated by extracting martingale residuals
 from reduced null models (excluding the covariate of interest) and fitting
-LOESS smooths to detect non-linear dependencies.</p></li>
+LOESS curves to detect non-linear dependencies.</p></li>
 <li><p><strong>Influence &amp; Stability:</strong> Evaluated using standardized DFBETAs
 to identify highly influential observations.</p></li>
 <li><p><strong>Collinearity:</strong> Evaluated using the Generalized Variance
@@ -184,7 +184,8 @@ record qualitative justifications for non-identifiable assumptions on the audit 
 <span class="r-out co"><span class="r-pr">#&gt;</span> ── Partially Assessable Assumptions ───────────────────────────── </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Outlier Impact</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Flagged observations: 11 by deviance residuals, 5 by log-odds, 5 by normal deviate. Use plot(audit, which = 'outliers') to inspect residual distributions.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Flagged observations: 11 by deviance residuals, 5 by log-odds, 5 by normal deviate.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Use plot(audit, which = 'outliers') to inspect residual distributions.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Missing Data</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Complete data: no missing values across 6 variable(s).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Functional Form / Linearity of Continuous Predictors</span>
