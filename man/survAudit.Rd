@@ -59,7 +59,7 @@ The audit focuses on the fundamental assumptions of Cox regression:
 the \code{cox.zph} test.
 \item \strong{Functional Form:} Evaluated by extracting martingale residuals
 from reduced null models (excluding the covariate of interest) and fitting
-LOESS smooths to detect non-linear dependencies.
+LOESS curves to detect non-linear dependencies.
 \item \strong{Influence & Stability:} Evaluated using standardized DFBETAs
 to identify highly influential observations.
 \item \strong{Collinearity:} Evaluated using the Generalized Variance
