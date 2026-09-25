@@ -1,8 +1,8 @@
 # survAudit 1.2.0
 
-* **Subsampling Performance**: Added `max_points` parameter (default 5000) to `plot.survAudit()`. For large cohorts, unflagged points are downsampled systematically across quantiles to avoid plotting bottlenecks, while flagged cases (extreme deviance/log-odds residuals and high DFBETAs) are deterministically preserved.
-* **Console Formatting**: Improved `print.survAudit()` by wrapping the outlier diagnostic summary across two indented lines, keeping output within standard console widths.
-* **Documentation & Vignettes**: Restructured vignette and case study to enhance clarity, added cross-reference links for non-identifiable assumptions, refined statistical terminology to "smoothed curve" and "LOESS curve", and shortened administrative censoring justification.
+* **Subsampling**: Added `max_points` (default 5000) to `plot.survAudit()` to optimize plotting in large datasets while retaining all flagged outliers and influential cases.
+* **Console Output**: Wrapped outlier summary in `print.survAudit()` across two lines to fit standard console widths.
+* **Documentation**: Refined vignette and case study terminology, added section links, and updated assumption justifications.
 
 # survAudit 1.1.0
 
