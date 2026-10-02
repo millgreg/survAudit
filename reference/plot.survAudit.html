@@ -3,10 +3,10 @@
 Five diagnostic panels are available:
 Proportional Hazards (which = "ph"): Plots scaled
 Schoenfeld residuals against transformed time for each covariate, with a
-LOESS smoother and horizontal reference lines at the estimated coefficients.
+smoothed curve and horizontal reference lines at the estimated coefficients.
 Functional Form (which = "functional"): Plots
 martingale residuals from a null (covariate-free) Cox model against
-each continuous covariate, with a LOESS smoother and a linear fit
+each continuous covariate, with a smoothed curve and a linear fit
 reference line to screen for non-linear effects.
 Influence Diagnostics (which = "influence"): Plots
 standardized DFBETA statistics for each covariate across observation
@@ -37,7 +37,7 @@ dashed 45-degree reference line.
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">survAudit</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.3.0</span>
       </span>
     </div>
 
@@ -76,10 +76,10 @@ dashed 45-degree reference line.
     <p>Produces ggplot2-based diagnostic displays for a <code>survAudit</code> object.
 Five diagnostic panels are available:</p><ul><li><p><strong>Proportional Hazards (<code>which = "ph"</code>):</strong> Plots scaled
 Schoenfeld residuals against transformed time for each covariate, with a
-LOESS smoother and horizontal reference lines at the estimated coefficients.</p></li>
+smoothed curve and horizontal reference lines at the estimated coefficients.</p></li>
 <li><p><strong>Functional Form (<code>which = "functional"</code>):</strong> Plots
 martingale residuals from a null (covariate-free) Cox model against
-each continuous covariate, with a LOESS smoother and a linear fit
+each continuous covariate, with a smoothed curve and a linear fit
 reference line to screen for non-linear effects.</p></li>
 <li><p><strong>Influence Diagnostics (<code>which = "influence"</code>):</strong> Plots
 standardized DFBETA statistics for each covariate across observation
@@ -100,6 +100,7 @@ dashed 45-degree reference line.</p></li>
 <span>  which <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ph"</span>, <span class="st">"functional"</span>, <span class="st">"influence"</span>, <span class="st">"outliers"</span>, <span class="st">"gof"</span><span class="op">)</span>,</span>
 <span>  vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  max_points <span class="op">=</span> <span class="fl">5000L</span>,</span>
+<span>  smooth_method <span class="op">=</span> <span class="st">"auto"</span>,</span>
 <span>  ask <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -128,8 +129,18 @@ are included.</p></dd>
 
 <dt id="arg-max-points">max_points<a class="anchor" aria-label="anchor" href="#arg-max-points"></a></dt>
 <dd><p>Integer specifying the maximum number of observations to
-display per panel (and to use for smoothing). Defaults to 5000. If <code>NULL</code>
-or non-positive, all observations are used without subsampling.</p></dd>
+display per panel. Defaults to 5000. If <code>NULL</code> or non-positive, all
+observations are used without subsampling. Smoothers are always fitted on
+the full (unsubsampled) data regardless of this setting.</p></dd>
+
+
+<dt id="arg-smooth-method">smooth_method<a class="anchor" aria-label="anchor" href="#arg-smooth-method"></a></dt>
+<dd><p>Character string specifying the smoothing method for
+trend curves in <code>"ph"</code> and <code>"functional"</code> plots. One of
+<code>"auto"</code> (default), <code>"loess"</code>, or <code>"gam"</code>.
+When <code>"auto"</code>, LOESS is used for panels with N &lt;= 1000 observations
+and GAM (<code><a href="https://rdrr.io/pkg/mgcv/man/gam.html" class="external-link">mgcv::gam</a></code>) for larger panels, matching the default
+behaviour of <code><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">geom_smooth</a></code>.</p></dd>
 
 
 <dt id="arg-ask">ask<a class="anchor" aria-label="anchor" href="#arg-ask"></a></dt>
@@ -153,7 +164,8 @@ invisibly.</p>
 For large datasets (e.g., \(n &gt; 5000\)), <code>plot.survAudit</code> subsamples
 data to <code>max_points</code> observations per panel (default 5000) to prevent
 overplotting and rendering delays:</p><ul><li><p><strong><code>"ph"</code> and <code>"functional"</code>:</strong> Randomly subsamples points
-per covariate; smoothers are computed on this subsample for fast display.</p></li>
+per covariate for display. Smoothers are always fitted on the full
+(unsubsampled) data.</p></li>
 <li><p><strong><code>"influence"</code> and <code>"outliers"</code>:</strong> Extreme-preserving
 subsampling. All observations exceeding diagnostic thresholds
 (\(\pm 2/\sqrt{n}\) for DFBETAs, \(\pm 1.96\) for deviance and normal deviate,
