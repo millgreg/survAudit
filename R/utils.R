@@ -38,7 +38,7 @@
 .get_continuous_vars <- function(fit, data = NULL) {
   mf <- stats::model.frame(fit)
 
-  # Identify the response column (Surv object) — always the first column
+  # Identify the response column (Surv object) - always the first column
 
   response_idx <- attr(stats::terms(mf), "response")
   if (response_idx > 0) {
@@ -50,34 +50,6 @@
   }, logical(1))
 
   names(which(is_continuous))
-}
-
-#' Get categorical covariate names from a Cox model
-#'
-#' Examines the model frame to identify factor or character variables,
-#' excluding the response (Surv) variable.
-#'
-#' @param fit A fitted \code{coxph} object.
-#' @param data Optional data frame. If \code{NULL}, the model frame is used.
-#'
-#' @return A character vector of categorical covariate names.
-#'
-#' @keywords internal
-#' @noRd
-.get_categorical_vars <- function(fit, data = NULL) {
-  mf <- stats::model.frame(fit)
-
-  # Remove the response column
-  response_idx <- attr(stats::terms(mf), "response")
-  if (response_idx > 0) {
-    mf <- mf[, -response_idx, drop = FALSE]
-  }
-
-  is_categorical <- vapply(mf, function(x) {
-    is.factor(x) || is.character(x)
-  }, logical(1))
-
-  names(which(is_categorical))
 }
 
 #' Format a p-value for display

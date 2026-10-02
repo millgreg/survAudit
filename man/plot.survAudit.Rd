@@ -9,6 +9,7 @@
   which = c("ph", "functional", "influence", "outliers", "gof"),
   vars = NULL,
   max_points = 5000L,
+  smooth_method = "auto",
   ask = interactive(),
   ...
 )
@@ -26,8 +27,16 @@ include in covariate-specific plots (\code{"ph"}, \code{"functional"}, and
 are included.}
 
 \item{max_points}{Integer specifying the maximum number of observations to
-display per panel (and to use for smoothing). Defaults to 5000. If \code{NULL}
-or non-positive, all observations are used without subsampling.}
+display per panel. Defaults to 5000. If \code{NULL} or non-positive, all
+observations are used without subsampling. Smoothers are always fitted on
+the full (unsubsampled) data regardless of this setting.}
+
+\item{smooth_method}{Character string specifying the smoothing method for
+trend curves in \code{"ph"} and \code{"functional"} plots. One of
+\code{"auto"} (default), \code{"loess"}, or \code{"gam"}.
+When \code{"auto"}, LOESS is used for panels with N <= 1000 observations
+and GAM (\code{mgcv::gam}) for larger panels, matching the default
+behaviour of \code{\link[ggplot2]{geom_smooth}}.}
 
 \item{ask}{Logical. If \code{TRUE} (the default in interactive
 sessions), the user is prompted between plots.}
@@ -45,10 +54,10 @@ Five diagnostic panels are available:
 \itemize{
 \item \strong{Proportional Hazards (\code{which = "ph"}):} Plots scaled
 Schoenfeld residuals against transformed time for each covariate, with a
-LOESS smoother and horizontal reference lines at the estimated coefficients.
+smoothed curve and horizontal reference lines at the estimated coefficients.
 \item \strong{Functional Form (\code{which = "functional"}):} Plots
 martingale residuals from a null (covariate-free) Cox model against
-each continuous covariate, with a LOESS smoother and a linear fit
+each continuous covariate, with a smoothed curve and a linear fit
 reference line to screen for non-linear effects.
 \item \strong{Influence Diagnostics (\code{which = "influence"}):} Plots
 standardized DFBETA statistics for each covariate across observation
@@ -69,7 +78,8 @@ data to \code{max_points} observations per panel (default 5000) to prevent
 overplotting and rendering delays:
 \itemize{
 \item \strong{\code{"ph"} and \code{"functional"}:} Randomly subsamples points
-per covariate; smoothers are computed on this subsample for fast display.
+per covariate for display. Smoothers are always fitted on the full
+(unsubsampled) data.
 \item \strong{\code{"influence"} and \code{"outliers"}:} Extreme-preserving
 subsampling. All observations exceeding diagnostic thresholds
 (\eqn{\pm 2/\sqrt{n}} for DFBETAs, \eqn{\pm 1.96} for deviance and normal deviate,

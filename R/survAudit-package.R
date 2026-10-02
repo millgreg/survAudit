@@ -17,6 +17,7 @@
 #'
 #' @import ggplot2
 #' @import survival
+#' @importFrom mgcv gam s
 #' @importFrom stats model.frame coef residuals vcov median quantile formula terms qnorm lm predict
 #'
 #' @docType package

@@ -7,9 +7,9 @@
 #'
 #' @param fit A fitted \code{\link[survival]{coxph}} object from the
 #'   \code{survival} package.
-#' @param data Optional data frame used to fit the model. If \code{NULL}
-#'   (the default), the function attempts to extract it from
-#'   \code{fit$model} or via \code{\link[stats]{model.frame}}.
+#' @param data Data frame used to fit the model. Required to compute
+#'   missing data summaries and to refit restricted models for functional
+#'   form diagnostics.
 #' @param alpha Significance level for flagging diagnostics (default
 #'   \code{0.05}). Used for display and interpretation only; does not
 #'   affect the underlying tests.
@@ -28,7 +28,7 @@
 #'   the \code{cox.zph} test.
 #'   \item \strong{Functional Form:} Evaluated by extracting martingale residuals
 #'   from reduced null models (excluding the covariate of interest) and fitting 
-#'   LOESS curves to detect non-linear dependencies.
+#'   smoothed curves to detect non-linear dependencies.
 #'   \item \strong{Influence & Stability:} Evaluated using standardized DFBETAs 
 #'   to identify highly influential observations.
 #'   \item \strong{Collinearity:} Evaluated using the Generalized Variance 
@@ -44,9 +44,10 @@
 #' transparent reporting:
 #' \enumerate{
 #'   \item \strong{Statistically Assessable}: Assumptions rigorously testable from 
-#'   data (e.g., Proportional Hazards, Linearity).
-#'   \item \strong{Partially Assessable}: Assumptions informed by metrics but 
-#'   requiring clinical judgment (e.g., Missing Data mechanisms, Outlier Impact).
+#'   data (e.g., Proportional Hazards, Collinearity, Influence Stability, Event Sufficiency).
+#'   \item \strong{Partially Assessable}: Assumptions informed by metrics or visual
+#'   inspection but requiring clinical/domain judgment (e.g., Functional Form,
+#'   Missing Data, Outlier Impact).
 #'   \item \strong{Non-Identifiable}: Assumptions that cannot be verified 
 #'   statistically (e.g., Independent Censoring, No Unmeasured Confounding).
 #' }
@@ -137,7 +138,7 @@ survAudit <- function(fit, data = NULL, alpha = 0.05, ph_transform = "km") {
    vif <- NULL
  } else {
    ph <- tryCatch(
-     .compute_ph_diagnostics(fit, transform = ph_transform, alpha = alpha),
+     .compute_ph_diagnostics(fit, transform = ph_transform),
      error = function(e) {
        warning("PH diagnostics failed: ", conditionMessage(e),
                call. = FALSE)

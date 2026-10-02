@@ -1,3 +1,10 @@
+# survAudit 1.3.0
+
+* **Smoothing**: Added `smooth_method` parameter to `plot.survAudit()` (default `"auto"`). Smoothers now automatically switch from LOESS to GAM for panels with more than 1,000 observations, matching `ggplot2` conventions. Smoothers are always fitted on the full dataset, independent of `max_points` dot subsampling.
+* **Performance**: Removed redundant base LOESS fitting in `survAudit()` functional form diagnostics, eliminating unnecessary compute overhead and memory bloat.
+* **Internal Cleanup**: Added `@noRd` to internal plotting and printing helpers to remove orphan `.Rd` files, removed unused internal functions and arguments, and aligned documentation with mandatory `data` argument requirements.
+* **Documentation**: Updated vignette, help pages, and internal summaries to use method-agnostic "smoothed curve" terminology.
+
 # survAudit 1.2.0
 
 * **Subsampling**: Added `max_points` (default 5000) to `plot.survAudit()` to optimize plotting in large datasets while retaining all flagged outliers and influential cases.

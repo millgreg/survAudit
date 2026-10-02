@@ -7,10 +7,10 @@
 #' \itemize{
 #'   \item \strong{Proportional Hazards (\code{which = "ph"}):} Plots scaled
 #'   Schoenfeld residuals against transformed time for each covariate, with a
-#'   LOESS smoother and horizontal reference lines at the estimated coefficients.
+#'   smoothed curve and horizontal reference lines at the estimated coefficients.
 #'   \item \strong{Functional Form (\code{which = "functional"}):} Plots
 #'   martingale residuals from a null (covariate-free) Cox model against
-#'   each continuous covariate, with a LOESS smoother and a linear fit
+#'   each continuous covariate, with a smoothed curve and a linear fit
 #'   reference line to screen for non-linear effects.
 #'   \item \strong{Influence Diagnostics (\code{which = "influence"}):} Plots
 #'   standardized DFBETA statistics for each covariate across observation
@@ -30,7 +30,8 @@
 #' overplotting and rendering delays:
 #' \itemize{
 #'   \item \strong{\code{"ph"} and \code{"functional"}:} Randomly subsamples points
-#'   per covariate; smoothers are computed on this subsample for fast display.
+#'   per covariate for display. Smoothers are always fitted on the full
+#'   (unsubsampled) data.
 #'   \item \strong{\code{"influence"} and \code{"outliers"}:} Extreme-preserving
 #'   subsampling. All observations exceeding diagnostic thresholds
 #'   (\eqn{\pm 2/\sqrt{n}} for DFBETAs, \eqn{\pm 1.96} for deviance and normal deviate,
@@ -51,8 +52,15 @@
 #'   \code{"influence"}). If \code{NULL} (the default), all available covariates
 #'   are included.
 #' @param max_points Integer specifying the maximum number of observations to
-#'   display per panel (and to use for smoothing). Defaults to 5000. If \code{NULL}
-#'   or non-positive, all observations are used without subsampling.
+#'   display per panel. Defaults to 5000. If \code{NULL} or non-positive, all
+#'   observations are used without subsampling. Smoothers are always fitted on
+#'   the full (unsubsampled) data regardless of this setting.
+#' @param smooth_method Character string specifying the smoothing method for
+#'   trend curves in \code{"ph"} and \code{"functional"} plots. One of
+#'   \code{"auto"} (default), \code{"loess"}, or \code{"gam"}.
+#'   When \code{"auto"}, LOESS is used for panels with N <= 1000 observations
+#'   and GAM (\code{mgcv::gam}) for larger panels, matching the default
+#'   behaviour of \code{\link[ggplot2]{geom_smooth}}.
 #' @param ask Logical. If \code{TRUE} (the default in interactive
 #'   sessions), the user is prompted between plots.
 #' @param ... Additional arguments (currently ignored).
@@ -76,12 +84,14 @@ plot.survAudit <- function(x,
                                      "influence", "outliers", "gof"),
                            vars = NULL,
                            max_points = 5000L,
+                           smooth_method = "auto",
                            ask = interactive(),
                            ...) {
 
   which <- match.arg(which, choices = c("ph", "functional",
                                         "influence", "outliers", "gof"),
                      several.ok = TRUE)
+  smooth_method <- match.arg(smooth_method, choices = c("auto", "loess", "gam"))
 
   # Colour palette ──────────────────────────────────────────────
   col_point  <- "#999999"
@@ -98,7 +108,8 @@ plot.survAudit <- function(x,
       message("PH diagnostics not available; skipping 'ph' plot.")
     } else {
       p_ph <- .plot_ph(x$ph, col_point, col_smooth,
-                       col_ref, alpha_pt, vars = vars, max_points = max_points)
+                       col_ref, alpha_pt, vars = vars, max_points = max_points,
+                       smooth_method = smooth_method)
       if (!is.null(p_ph)) plots[["ph"]] <- p_ph
     }
   }
@@ -112,7 +123,7 @@ plot.survAudit <- function(x,
     } else {
       p_ff <- .plot_functional(
         x$functional_form, col_point, col_smooth, col_ref, alpha_pt,
-        vars = vars, max_points = max_points
+        vars = vars, max_points = max_points, smooth_method = smooth_method
       )
       if (!is.null(p_ff)) plots[["functional"]] <- p_ff
     }
@@ -125,7 +136,7 @@ plot.survAudit <- function(x,
               "skipping 'influence' plot.")
     } else {
       p_inf <- .plot_influence(
-        x$influence, col_point, col_smooth, col_ref, col_thresh, alpha_pt,
+        x$influence, col_point, col_ref, col_thresh, alpha_pt,
         vars = vars, max_points = max_points
       )
       if (!is.null(p_inf)) plots[["influence"]] <- p_inf
@@ -198,6 +209,36 @@ plot.survAudit <- function(x,
 }
 
 
+#' Resolve smoothing method for diagnostic plots
+#'
+#' @param smooth_method Character: "auto", "loess", or "gam".
+#' @param n Integer: number of observations per panel.
+#' @return A list with components \code{method} (character) and
+#'   \code{formula} (formula).
+#' @keywords internal
+#' @noRd
+.resolve_smooth_method <- function(smooth_method, n) {
+  if (smooth_method == "auto") {
+    if (n > 1000) {
+      method <- "gam"
+      formula <- y ~ s(x, bs = "cs")
+      message("Smoothing method: GAM (n = ", format(n, big.mark = ","),
+              " per panel). Set smooth_method = \"loess\" to override.")
+    } else {
+      method <- "loess"
+      formula <- y ~ x
+    }
+  } else if (smooth_method == "gam") {
+    method <- "gam"
+    formula <- y ~ s(x, bs = "cs")
+  } else {
+    method <- "loess"
+    formula <- y ~ x
+  }
+  list(method = method, formula = formula)
+}
+
+
 #' Plot PH diagnostics (Schoenfeld residuals)
 #'
 #' @param ph PH diagnostics list from the survAudit object.
@@ -206,11 +247,13 @@ plot.survAudit <- function(x,
 #' @param col_ref Reference line colour.
 #' @param alpha_pt Point alpha.
 #' @param vars Optional character or integer vector of covariates to plot.
-#' @param max_points Optional maximum number of points to plot/smooth per covariate.
+#' @param max_points Optional maximum number of points to plot per covariate.
+#' @param smooth_method Smoothing method ("auto", "loess", or "gam").
 #' @return A \code{ggplot} object.
 #' @keywords internal
+#' @noRd
 .plot_ph <- function(ph, col_point, col_smooth, col_ref, alpha_pt, vars = NULL,
-                     max_points = 5000L) {
+                     max_points = 5000L, smooth_method = "auto") {
 
   zph <- ph$zph
 
@@ -256,7 +299,7 @@ plot.survAudit <- function(x,
     stringsAsFactors = FALSE
   )
 
-  # Subsample points for plotting and smoothing in large datasets to prevent overplotting
+  # Subsample points for plotting in large datasets to prevent overplotting
   is_subsampled <- FALSE
   df_plot <- df_full
   if (!is.null(max_points) && is.finite(max_points) && max_points > 0 && n_t > max_points) {
@@ -270,6 +313,9 @@ plot.survAudit <- function(x,
     }))
     is_subsampled <- TRUE
   }
+
+  # Resolve smoothing method (for PH, each covariate panel has n_t event times)
+  resolved_method <- .resolve_smooth_method(smooth_method, n_t)
 
   # Calculate reference horizontal lines (cox.zph$y contains scaled Schoenfeld + beta_hat, so colMeans recovers beta_hat)
   beta_hat <- colMeans(y_mat, na.rm = TRUE)
@@ -295,7 +341,9 @@ plot.survAudit <- function(x,
 
   ggplot(df_plot, aes(x = .data$time, y = .data$residual)) +
     geom_point(colour = col_point, alpha = alpha_pt, size = 1) +
-    geom_smooth(method = "loess", formula = y ~ x,
+    geom_smooth(data = df_full,
+                method = resolved_method$method,
+                formula = resolved_method$formula,
                 se = TRUE, colour = col_smooth, linewidth = 0.8,
                 fill = col_smooth, alpha = 0.15) +
     geom_hline(data = df_ref, aes(yintercept = .data$beta), linetype = "dashed", colour = col_ref,
@@ -326,12 +374,14 @@ plot.survAudit <- function(x,
 #' @param col_ref Reference line colour.
 #' @param alpha_pt Point alpha.
 #' @param vars Optional character or integer vector of covariates to plot.
-#' @param max_points Optional maximum number of points to plot/smooth per covariate.
+#' @param max_points Optional maximum number of points to plot per covariate.
+#' @param smooth_method Smoothing method ("auto", "loess", or "gam").
 #' @return A \code{ggplot} object.
 #' @keywords internal
+#' @noRd
 .plot_functional <- function(ff, col_point, col_smooth,
                              col_ref, alpha_pt, vars = NULL,
-                             max_points = 5000L) {
+                             max_points = 5000L, smooth_method = "auto") {
 
   target_vars <- names(ff$results)
   if (!is.null(vars)) {
@@ -358,7 +408,7 @@ plot.survAudit <- function(x,
 
   df_full <- do.call(rbind, dfs)
 
-  # Subsample points for plotting and smoothing in large datasets to prevent overplotting
+  # Subsample points for plotting in large datasets to prevent overplotting
   is_subsampled <- FALSE
   df_plot <- df_full
   if (nrow(df_full) > 0 && !is.null(max_points) && is.finite(max_points) && max_points > 0) {
@@ -376,6 +426,10 @@ plot.survAudit <- function(x,
     }
   }
 
+  # Resolve smoothing method (for functional form, points per panel = count per covariate)
+  n_per_panel <- if (nrow(df_full) > 0) max(table(df_full$variable)) else 0L
+  resolved_method <- .resolve_smooth_method(smooth_method, n_per_panel)
+
   plot_caption <- if (is_subsampled) {
     paste0("Points subsampled to ", format(max_points, big.mark = ","),
            " observations per covariate.")
@@ -385,10 +439,13 @@ plot.survAudit <- function(x,
 
   ggplot(df_plot, aes(x = .data$covariate_value, y = .data$residual)) +
     geom_point(colour = col_point, alpha = alpha_pt, size = 1) +
-    geom_smooth(method = "loess", formula = y ~ x,
+    geom_smooth(data = df_full,
+                method = resolved_method$method,
+                formula = resolved_method$formula,
                 se = TRUE, colour = col_smooth, linewidth = 0.8,
                 fill = col_smooth, alpha = 0.15) +
-    geom_smooth(method = "lm", formula = y ~ x,
+    geom_smooth(data = df_full,
+                method = "lm", formula = y ~ x,
                 se = FALSE, colour = col_ref,
                 linetype = "dashed", linewidth = 0.5) +
     facet_wrap(~ variable, scales = "free") +
@@ -413,7 +470,6 @@ plot.survAudit <- function(x,
 #'
 #' @param inf Influence diagnostics list.
 #' @param col_point Point colour.
-#' @param col_smooth Smooth line colour (unused here).
 #' @param col_ref Reference line colour.
 #' @param col_thresh Threshold line colour.
 #' @param alpha_pt Point alpha.
@@ -421,7 +477,8 @@ plot.survAudit <- function(x,
 #' @param max_points Optional maximum number of points to plot per covariate.
 #' @return A \code{ggplot} object.
 #' @keywords internal
-.plot_influence <- function(inf, col_point, col_smooth,
+#' @noRd
+.plot_influence <- function(inf, col_point,
                             col_ref, col_thresh, alpha_pt, vars = NULL,
                             max_points = 5000L) {
 
@@ -527,6 +584,7 @@ plot.survAudit <- function(x,
 #' @param max_points Optional maximum number of points to plot per residual type.
 #' @return A \code{ggplot} object.
 #' @keywords internal
+#' @noRd
 .plot_outliers <- function(ol, col_point, col_ref, alpha_pt, max_points = 5000L) {
 
   lp <- ol$linear_predictor
@@ -624,6 +682,7 @@ plot.survAudit <- function(x,
 #' @param max_points Optional maximum number of points to plot.
 #' @return A \code{ggplot} object.
 #' @keywords internal
+#' @noRd
 .plot_gof <- function(gof, col_point, col_ref, alpha_pt, max_points = 5000L) {
 
   df_full <- data.frame(

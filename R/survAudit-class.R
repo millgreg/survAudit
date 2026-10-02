@@ -89,7 +89,7 @@
     )
   }
 
-  # Type checks — required components must be lists
+  # Type checks - required components must be lists
   required_lists <- c("model_info", "assumptions")
   for (comp in required_lists) {
     if (!is.list(x[[comp]])) {

@@ -210,7 +210,7 @@
 
   paste0(
     "Assessment of ", length(results), " continuous covariate(s) is inherently visual. ",
-    "Use plot(audit, which = 'functional') to inspect martingale residual LOESS curves for non-linearity."
+    "Use plot(audit, which = 'functional') to inspect martingale residual smoothed curves for non-linearity."
   )
 }
 

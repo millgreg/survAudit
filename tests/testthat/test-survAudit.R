@@ -339,4 +339,50 @@ test_that("plot() supports max_points subsampling with extreme preservation", {
   expect_false(is.unsorted(p_gof_shuf$data$x))
 })
 
+# -- Test 22: plot() with smooth_method parameter ------------------
+test_that("plot() supports smooth_method parameter and resolves correctly", {
+  audit_test <- survAudit(fit, data = veteran)
+
+  # loess runs without error
+  p_loess <- plot(audit_test, which = "ph", smooth_method = "loess", ask = FALSE)
+  expect_s3_class(p_loess, "ggplot")
+
+  # gam runs without error
+  p_gam <- plot(audit_test, which = "ph", smooth_method = "gam", ask = FALSE)
+  expect_s3_class(p_gam, "ggplot")
+
+  # functional plot works with smooth_method = 'gam'
+  p_ff_gam <- plot(audit_test, which = "functional", smooth_method = "gam", ask = FALSE)
+  expect_s3_class(p_ff_gam, "ggplot")
+
+  # invalid smooth_method produces informative match.arg error
+  expect_error(
+    plot(audit_test, which = "ph", smooth_method = "spline", ask = FALSE),
+    "should be one of"
+  )
+
+  # auto is silent for small sample sizes (veteran has N=137)
+  expect_no_message(
+    plot(audit_test, which = "ph", smooth_method = "auto", ask = FALSE)
+  )
+
+  # Internal resolution helper tests
+  res_small <- .resolve_smooth_method("auto", 500)
+  expect_equal(res_small$method, "loess")
+  expect_equal(format(res_small$formula), "y ~ x")
+
+  expect_message(
+    res_large <- .resolve_smooth_method("auto", 1500),
+    "Smoothing method: GAM"
+  )
+  expect_equal(res_large$method, "gam")
+  expect_equal(format(res_large$formula), "y ~ s(x, bs = \"cs\")")
+
+  res_forced_gam <- .resolve_smooth_method("gam", 200)
+  expect_equal(res_forced_gam$method, "gam")
+
+  res_forced_loess <- .resolve_smooth_method("loess", 50000)
+  expect_equal(res_forced_loess$method, "loess")
+})
+
 

@@ -5,9 +5,9 @@
 #' Assesses the linearity assumption for each continuous covariate using
 #' martingale residuals from a restricted Cox model (a model excluding the
 #' specific covariate being assessed).
-#' For each continuous covariate, a loess smooth of the restricted model
-#' martingale residuals against the covariate values is compared to a
-#' linear fit to screen for departures from linearity.
+#' For each continuous covariate, the restricted model martingale residuals
+#' are extracted alongside covariate values for visual inspection of non-linear
+#' patterns in diagnostic plots.
 #'
 #' @param fit A fitted \code{coxph} object.
 #' @param data The data frame used to fit the model.
@@ -24,10 +24,6 @@
 #'         \item{residuals}{Numeric vector of martingale residuals from the
 #'           restricted model.}
 #'         \item{covariate_values}{Numeric vector of covariate values.}
-#'         \item{loess_fit}{The \code{loess} object.}
-#'         \item{departure_detected}{Logical indicating whether the loess
-#'           smooth captures substantially more variance than the linear
-#'           fit (screening heuristic).}
 #'       }
 #'     }
 #'   }
@@ -74,17 +70,9 @@
       covariate_values_clean <- covariate_values[complete]
       mart_resid_clean <- mart_resid[complete]
 
-      # Fit loess smooth
-      loess_fit <- stats::loess(
-        mart_resid_clean ~ covariate_values_clean,
-        degree = 1,
-        span = 0.75
-      )
-
       list(
         residuals = mart_resid_clean,
-        covariate_values = covariate_values_clean,
-        loess_fit = loess_fit
+        covariate_values = covariate_values_clean
       )
     }, error = function(e) {
       # If assessment fails for this variable, skip gracefully

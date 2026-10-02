@@ -178,6 +178,7 @@ print.survAudit <- function(x, ...) {
 #' @return A list of lists, each with elements \code{label} and
 #'   \code{justification}.
 #' @keywords internal
+#' @noRd
 .get_non_identifiable_items <- function(x) {
 
   # Default non-identifiable assumptions

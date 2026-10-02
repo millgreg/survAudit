@@ -16,7 +16,7 @@ Full documentation and a reproducible case study are available at: **[https://mi
    * **Statistically Assessable**: Assumptions rigorously testable from data (e.g., Proportional Hazards, Functional Form, Influence Stability, Event Sufficiency).
 2. **Aggregated Diagnostics**:
    * **Collinearity (GVIF)**: Implements the Generalized Variance Inflation Factor (GVIF) algorithm (Fox & Monette, 1992) to group dummy variables of factor predictors.
-   * **Functional Form (Linearity)**: Martingale residuals from multivariate reduced models are compared against continuous predictors using LOESS smooths.
+   * **Functional Form (Linearity)**: Martingale residuals from multivariate reduced models are compared against continuous predictors using smoothed curves.
    * **Visual Diagnostics**: Overall goodness-of-fit via Cox-Snell residuals, outlier panels, and influence diagnostics.
 3. **Auditable R Objects**: Allows documenting qualitative justifications directly on the R object. Saving the object via `saveRDS()` preserves the audit trail alongside the model.
 
@@ -27,7 +27,7 @@ Full documentation and a reproducible case study are available at: **[https://mi
 The diagnostics in `survAudit` are statistical tests and heuristics. They have inherent limitations that require critical scientific judgment:
 
 * **Proportional Hazards**: The global and variable-specific PH tests (via `cox.zph()`) only check for *linear* deviations from proportional hazards. Furthermore, these tests can be overly sensitive in large sample sizes, flagging minor, clinically irrelevant violations. Visual inspection of the scaled Schoenfeld residuals is strictly recommended.
-* **Functional Form**: LOESS smoothing of martingale residuals is highly sensitive to the distribution of covariates. Confidence bands widen significantly in the tails where data is sparse, so perceived non-linearities at the extremes should be interpreted with caution.
+* **Functional Form**: Smoothed curves of martingale residuals are highly sensitive to the distribution of covariates. Confidence bands widen significantly in the tails where data is sparse, so perceived non-linearities at the extremes should be interpreted with caution.
 * **Non-testability**: Statistical models cannot verify their own causal structure. The assumptions of independent censoring and unmeasured confounding *cannot* be verified from the observed data and rely entirely on study design and domain knowledge.
 
 ---
@@ -46,7 +46,7 @@ Alternatively, if you have the source archive downloaded, you can install it man
 
 ```R
 # Install the built source archive locally (filename depends on the release tag)
-install.packages("survAudit-1.1.0.tar.gz", repos = NULL, type = "source")
+install.packages("survAudit-1.3.0.tar.gz", repos = NULL, type = "source")
 ```
 
 ---
@@ -123,14 +123,14 @@ If you use `survAudit` in your research, please cite it:
   title = {survAudit: Comprehensive Diagnostics for Cox Proportional Hazards Models},
   author = {Gregor Miller},
   year = {2026},
-  note = {R package version 1.1.0},
+  note = {R package version 1.3.0},
   url = {https://millgreg.github.io/survAudit},
 }
 ```
 
 ## Dependencies
 
-`survAudit` builds heavily on the foundations provided by the [`survival`](https://cran.r-project.org/package=survival) package (Therneau, 2024) for model fitting and residual calculations. Visual diagnostics are implemented using `ggplot2` and `patchwork`.
+`survAudit` builds heavily on the foundations provided by the [`survival`](https://cran.r-project.org/package=survival) package (Therneau, 2024) for model fitting and residual calculations. Visual diagnostics are implemented using `ggplot2`. Non-parametric smoothing uses base R (`stats::loess`) and [`mgcv`](https://cran.r-project.org/package=mgcv).
 
 ---
 

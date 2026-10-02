@@ -77,7 +77,6 @@
   event_times <- times[status == 1]
   if (length(event_times) > 0) {
     time_table <- table(event_times)
-    n_tied_groups <- sum(time_table > 1)
     n_tied_events <- sum(time_table[time_table > 1])
     n_ties <- n_tied_events
     tie_fraction <- n_ties / n_events
