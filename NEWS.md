@@ -1,3 +1,7 @@
+# survAudit 1.3.1
+
+* **Ontology Alignment**: Reclassified influence stability from statistically assessable to partially assessable in `audit$assumptions` and console `print()`, aligning with the framework distinction that DFBETAs threshold screening requires qualitative scrutiny rather than formal hypothesis testing.
+
 # survAudit 1.3.0
 
 * **Smoothing**: Added `smooth_method` parameter to `plot.survAudit()` (default `"auto"`). Smoothers now automatically switch from LOESS to GAM for panels with more than 1,000 observations, matching `ggplot2` conventions. Smoothers are always fitted on the full dataset, independent of `max_points` dot subsampling.

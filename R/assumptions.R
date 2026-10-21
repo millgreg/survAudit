@@ -54,7 +54,7 @@
   inf_evidence <- .summarize_influence(influence)
   influence_stability <- list(
     name = "influence_stability",
-    type = "assessable",
+    type = "partially_assessable",
     evidence_summary = inf_evidence,
     diagnostic_key = "influence"
   )
@@ -80,7 +80,6 @@
 
   assessable <- list(
     proportional_hazards = proportional_hazards,
-    influence_stability = influence_stability,
     collinearity = collinearity,
     event_sufficiency = event_sufficiency
   )
@@ -107,6 +106,7 @@
 
   partially_assessable <- list(
     functional_form = functional_form_assumption,
+    influence_stability = influence_stability,
     outlier_impact = outlier_impact,
     missing_data = missing_data
   )

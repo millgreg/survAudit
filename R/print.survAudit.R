@@ -67,6 +67,32 @@ print.survAudit <- function(x, ...) {
   cat("\n")
   cat(.section_header("Partially Assessable Assumptions"), "\n\n")
 
+  # -- Functional Form --
+  cat("  Functional Form / Linearity of Continuous Predictors\n")
+  if (!is.null(x$functional_form) &&
+      length(x$functional_form$results) > 0L) {
+    cat("    Inspect visually via plot(..., which = \"functional\"):\n")
+    cat("    ", paste(x$functional_form$continuous_vars, collapse = ", "), "\n", sep = "")
+  } else {
+    cat("    not available\n")
+  }
+
+  cat("\n")
+
+  # -- Influence Stability --
+  cat("  Influence Stability\n")
+  if (!is.null(x$influence)) {
+    inf <- x$influence
+    cat("    Max |dfbetas|: ",
+        sprintf("%.2f", inf$max_dfbetas$value),
+        " (obs ", inf$max_dfbetas$obs,
+        ", covariate: ", inf$max_dfbetas$variable, ")\n", sep = "")
+  } else {
+    cat("    not available\n")
+  }
+
+  cat("\n")
+
   # -- Outlier Impact --
   cat("  Outlier Impact\n")
   if (!is.null(x$outliers)) {
@@ -75,20 +101,12 @@ print.survAudit <- function(x, ...) {
     cat("    not available\n")
   }
 
+  cat("\n")
+
   # -- Missing Data --
   cat("  Missing Data\n")
   if (!is.null(x$data_context)) {
     cat("    ", .summarize_missing(x$data_context), "\n", sep = "")
-  } else {
-    cat("    not available\n")
-  }
-
-  # -- Functional Form --
-  cat("  Functional Form / Linearity of Continuous Predictors\n")
-  if (!is.null(x$functional_form) &&
-      length(x$functional_form$results) > 0L) {
-    cat("    Inspect visually via plot(..., which = \"functional\"):\n")
-    cat("    ", paste(x$functional_form$continuous_vars, collapse = ", "), "\n", sep = "")
   } else {
     cat("    not available\n")
   }
@@ -120,20 +138,6 @@ print.survAudit <- function(x, ...) {
     if (!found_any) {
       cat("    No covariates flagged (p >= ", alpha, ")\n", sep = "")
     }
-  } else {
-    cat("    not available\n")
-  }
-
-  cat("\n")
-
-  # -- Influence Stability --
-  cat("  Influence Stability\n")
-  if (!is.null(x$influence)) {
-    inf <- x$influence
-    cat("    Max |dfbetas|: ",
-        sprintf("%.2f", inf$max_dfbetas$value),
-        " (obs ", inf$max_dfbetas$obs,
-        ", covariate: ", inf$max_dfbetas$variable, ")\n", sep = "")
   } else {
     cat("    not available\n")
   }
