@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">survAudit</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.3.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.3.1</span>
       </span>
     </div>
 
@@ -192,14 +192,19 @@ form.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Partially Assessable Assumptions ───────────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Outlier Impact</span></span>
-<span><span class="co">#&gt;     Flagged observations: 19 by deviance residuals, 9 by log-odds, 9 by normal deviate.</span></span>
-<span><span class="co">#&gt;     Use plot(audit, which = 'outliers') to inspect residual distributions.</span></span>
-<span><span class="co">#&gt;   Missing Data</span></span>
-<span><span class="co">#&gt;     1 of 7 variable(s) have missing values (2 total missing entries).</span></span>
 <span><span class="co">#&gt;   Functional Form / Linearity of Continuous Predictors</span></span>
 <span><span class="co">#&gt;     Inspect visually via plot(..., which = "functional"):</span></span>
 <span><span class="co">#&gt;     age, bili, albumin, protime</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Influence Stability</span></span>
+<span><span class="co">#&gt;     Max |dfbetas|: 0.96 (obs 325, covariate: protime)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Outlier Impact</span></span>
+<span><span class="co">#&gt;     Flagged observations: 19 by deviance residuals, 9 by log-odds, 9 by normal deviate.</span></span>
+<span><span class="co">#&gt;     Use plot(audit, which = 'outliers') to inspect residual distributions.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Missing Data</span></span>
+<span><span class="co">#&gt;     1 of 7 variable(s) have missing values (2 total missing entries).</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Statistically Assessable Assumptions ───────────────────────── </span></span>
 <span><span class="co">#&gt; </span></span>
@@ -207,9 +212,6 @@ form.</p>
 <span><span class="co">#&gt;     Global test: p = 0.001 (violation indicated)</span></span>
 <span><span class="co">#&gt;     bili: p = 0.005</span></span>
 <span><span class="co">#&gt;     protime: p = 0.003</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Influence Stability</span></span>
-<span><span class="co">#&gt;     Max |dfbetas|: 0.96 (obs 325, covariate: protime)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Event Sufficiency</span></span>
 <span><span class="co">#&gt;     EPV = 26.7 (adequate)</span></span>
